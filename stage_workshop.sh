@@ -34,12 +34,6 @@ function stage_clusters() {
     export PC_VERSION="${PC_CURRENT_VERSION}"
   elif (( $(echo ${_workshop} | grep -i "PC 5.8" | wc ${WC_ARG}) > 0 )); then
     export PC_VERSION="${PC_STABLE_VERSION}"
-  elif (( $(echo ${_workshop} | grep -i "PC 5.9" | wc ${WC_ARG}) > 0 )); then
-    export PC_VERSION=5.9.2
-  elif (( $(echo ${_workshop} | grep -i "PC 5.7" | wc ${WC_ARG}) > 0 )); then
-    export PC_VERSION=5.7.1.1
-  elif (( $(echo ${_workshop} | grep -i "PC 5.6" | wc ${WC_ARG}) > 0 )); then
-    export PC_VERSION=5.6.2
   fi
 
   # Map workshop to staging script(s) and libraries,
