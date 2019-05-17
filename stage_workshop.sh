@@ -22,7 +22,7 @@ function stage_clusters() {
   local    _pe_launch # will be transferred and executed on PE
   local    _pc_launch # will be transferred and executed on PC
   local       _sshkey=${SSH_PUBKEY}
-  local       _wc_arg='--lines'
+  #local       _wc_arg='--lines'
   local     _workshop=${WORKSHOPS[$((${WORKSHOP_NUM}-1))]}
 
   # Map to latest and greatest of each point release
