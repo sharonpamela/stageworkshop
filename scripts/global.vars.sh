@@ -35,10 +35,7 @@ QCOW2_IMAGES=(\
    Windows10-1709.qcow2 \
    ToolsVM.qcow2 \
    ERA-Server-build-1.0.1.qcow2 \
-   #'https://download.nutanix.com/karbon/centos/0.0/centos7-0.0.qcow2' \
-   #'http://download.nutanix.com/karbon/0.8/acs-centos7.qcow2' \
- )
-
+)
 ISO_IMAGES=(\
    CentOS7.iso \
    Windows2016.iso \
@@ -189,17 +186,16 @@ case "${OCTET[0]}.${OCTET[1]}" in
      'https://s3.amazonaws.com/get-ahv-images/AutoDC2.qcow2' \
    )
 
-  10.132 ) # https://sewiki.nutanix.com/index.php/SH-COLO-IP-ADDR
-       DNS_SERVERS='10.132.71.40'
-        NW1_SUBNET="${IPV4_PREFIX%.*}.128.4/17"
-    NW1_DHCP_START="${IPV4_PREFIX}.100"
-    NW1_DHCP_END="${IPV4_PREFIX}.250"
-      # PC deploy file local override, TODO:30 make an PC_URL array and eliminate
-    PC_CURRENT_URL=http://10.132.128.50/E%3A/share/Nutanix/PrismCentral/pc-${PC_VERSION}-deploy.tar
-    PC_CURRENT_METAURL=http://10.132.128.50/E%3A/share/Nutanix/PrismCentral/pc-${PC_VERSION}-deploy-metadata.json
-    PC_STABLE_METAURL=${PC_CURRENT_METAURL}
+   DNS_SERVERS='10.132.71.40'
+   NW1_SUBNET="${IPV4_PREFIX%.*}.128.4/17"
+   NW1_DHCP_START="${IPV4_PREFIX}.100"
+   NW1_DHCP_END="${IPV4_PREFIX}.250"
+   # PC deploy file local override, TODO:30 make an PC_URL array and eliminate
+   PC_CURRENT_URL=http://10.132.128.50/E%3A/share/Nutanix/PrismCentral/pc-${PC_VERSION}-deploy.tar
+   PC_CURRENT_METAURL=http://10.132.128.50/E%3A/share/Nutanix/PrismCentral/pc-${PC_VERSION}-deploy-metadata.json
+   PC_STABLE_METAURL=${PC_CURRENT_METAURL}
 
-    QCOW2_IMAGES=(\
+   QCOW2_IMAGES=(\
       Centos7-Base.qcow2 \
       Centos7-Update.qcow2 \
       Windows2012R2.qcow2 \

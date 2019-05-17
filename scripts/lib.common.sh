@@ -322,11 +322,6 @@ function images() {
         _name=acs-centos
       fi
 
-      # TODO:0 TOFIX: acs-centos ugly override for today...
-      if (( $(echo "${_image}" | grep -i 'centos7-0.0' | wc --lines ) > 0 )); then
-        _name=karbon-centos7.5.1804-ntnx-0.0
-      fi
-
       if [[ ${_cli} == 'acli' ]]; then
         _image_type='kDiskImage'
         _command+=" ${_name} annotation=${_image} image_type=${_image_type} \
