@@ -261,10 +261,10 @@ function select_workshop() {
         get_file
         break
         ;;
-      #"Validate Staged Clusters")
-      #  validate_clusters
-      #  break
-      #  ;;
+      "Validate Staged Clusters")
+        validate_clusters
+        break
+        ;;
       "Quit")
         exit
         ;;
@@ -304,14 +304,14 @@ function select_workshop() {
 . scripts/global.vars.sh
 begin
 
-#    _VALIDATE='Validate Staged Clusters'
+    _VALIDATE='Validate Staged Clusters'
 _CLUSTER_FILE='Cluster Input File'
  CLUSTER_LIST=
 
 # NONWORKSHOPS appended to WORKSHOPS
              WORKSHOP_COUNT=${#WORKSHOPS[@]}
 WORKSHOPS[${#WORKSHOPS[@]}]="Change ${_CLUSTER_FILE}"
-#WORKSHOPS[${#WORKSHOPS[@]}]=${_VALIDATE}
+WORKSHOPS[${#WORKSHOPS[@]}]=${_VALIDATE}
 WORKSHOPS[${#WORKSHOPS[@]}]="Quit"
            let NONWORKSHOPS=${#WORKSHOPS[@]}-${WORKSHOP_COUNT}
 
