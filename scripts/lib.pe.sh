@@ -237,7 +237,7 @@ function create_file_server() {
     log "${_internal_nw_name} network UUID: ${_internal_nw_uuid}"
     log "${_external_nw_name} network UUID: ${_external_nw_uuid}"
     log "${STORAGE_DEFAULT} storage container UUID: ${_storage_default_uuid}"
-
+  fi
   local _httpURL="https://localhost:9440/PrismGateway/services/rest/v1/vfilers"
 
   HTTP_JSON_BODY=$(cat <<EOF
