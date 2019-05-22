@@ -210,7 +210,7 @@ function file_analytics_install() {
 # Create File Server
 ###############################################################################################################################################################################
 
-function create_file_server() {
+function create_file_server(){
   local        CURL_HTTP_OPTS=" --max-time 25 --silent --header Content-Type:application/json --insecure "
   local                 _loop=0
   local
