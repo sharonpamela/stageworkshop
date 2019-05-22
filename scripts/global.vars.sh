@@ -6,6 +6,7 @@ PC_DEV_VERSION='5.10.3'
 PC_CURRENT_VERSION='5.10.3'
 PC_STABLE_VERSION='5.8.2'
 FILES_VERSION='3.5.0'
+FILE_ANALYTICS_VERSION='1.0.1'
 NTNX_INIT_PASSWORD='nutanix/4u'
 PRISM_ADMIN='admin'
 SSH_PUBKEY="${HOME}/.ssh/id_rsa.pub"
@@ -94,6 +95,8 @@ case "${OCTET[0]}.${OCTET[1]}" in
     PC_STABLE_URL='http://10.55.251.38/workshop_staging/euphrates-5.8.2-stable-prism_central.tar'
     FILES_METAURL='http://10.55.251.38/workshop_staging/afs-3.5.0.json'
     FILES_URL='http://10.55.251.38/workshop_staging/nutanix-afs-el7.3-release-afs-3.5.0-stable.qcow2'
+    FILE_ANALYTICS_METAURL='http://10.55.251.38/workshop_staging/nutanix-file-analytics-1.0.1-metadata.json'
+    FILE_ANALYTICS_URL='http://10.55.251.38/workshop_staging/nutanix-file-analytics-1.0.1.qcow2'
     JQ_REPOS=(\
          'http://10.55.251.38/workshop_staging/jq-linux64.dms' \
          'https://s3.amazonaws.com/get-ahv-images/jq-linux64.dms' \
@@ -123,6 +126,8 @@ case "${OCTET[0]}.${OCTET[1]}" in
     PC_STABLE_URL='http://10.42.194.11/workshop_staging/euphrates-5.8.2-stable-prism_central.tar'
     FILES_METAURL='http://10.42.194.11/workshop_staging/afs-3.5.0.json'
     FILES_URL='http://10.42.194.11/workshop_staging/nutanix-afs-el7.3-release-afs-3.5.0-stable.qcow2'
+    FILE_ANALYTICS_METAURL='http://10.42.194.11/workshop_staging/nutanix-file-analytics-1.0.1-metadata.json'
+    FILE_ANALYTICS_URL='http://10.42.194.11/workshop_staging/nutanix-file-analytics-1.0.1.qcow2'
     JQ_REPOS=(\
          'http://10.42.194.11/workshop_staging/jq-linux64.dms' \
          'https://s3.amazonaws.com/get-ahv-images/jq-linux64.dms' \
@@ -152,6 +157,8 @@ case "${OCTET[0]}.${OCTET[1]}" in
     PC_STABLE_URL='http://10.42.194.11/workshop_staging/euphrates-5.8.2-stable-prism_central.tar'
     FILES_METAURL='http://10.42.194.11/workshop_staging/afs-3.5.0.json'
     FILES_URL='http://10.42.194.11/workshop_staging/nutanix-afs-el7.3-release-afs-3.5.0-stable.qcow2'
+    FILE_ANALYTICS_METAURL='http://10.42.194.11/workshop_staging/nutanix-file-analytics-1.0.1-metadata.json'
+    FILE_ANALYTICS_URL='http://10.42.194.11/workshop_staging/nutanix-file-analytics-1.0.1.qcow2'
     JQ_REPOS=(\
            'http://10.42.194.11/workshop_staging/jq-linux64.dms' \
            'https://s3.amazonaws.com/get-ahv-images/jq-linux64.dms' \

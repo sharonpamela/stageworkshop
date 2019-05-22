@@ -569,6 +569,24 @@ function ntnx_download() {
         _source_url="${FILES_URL}"
       fi
     ;;
+    FILE ANALYTICS | file analytics )
+      args_required 'FILE_ANALYTICS_VERSION'
+      _meta_url="${FILE_ANALYTICS_METAURL}"
+
+      if [[ -z ${_meta_url} ]]; then
+        _error=22
+        log "Error ${_error}: unsupported FILES_VERSION=${FILE_ANALYTICS_VERSION}!"
+        log 'Sync the following to global.var.sh...'
+        log 'Browse to https://portal.nutanix.com/#/page/releases/afsDetails?targetVal=GA'
+        log " - Find ${FILE_ANALYTICS_VERSION} in the Additional Releases section on the lower right side"
+        log ' - Provide the metadata URL option to this function, both case stanzas.'
+        exit ${_error}
+      fi
+
+      if [[ ! -z ${FILE_ANALYTICS_URL} ]]; then
+        _source_url="${FILE_ANALYTICS_URL}"
+      fi
+    ;;
     * )
       _error=88
       log "Error ${_error}:: couldn't determine software-type ${_ncli_softwaretype}!"

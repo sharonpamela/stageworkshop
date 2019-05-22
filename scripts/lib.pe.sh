@@ -182,6 +182,150 @@ function files_install() {
 }
 
 ###############################################################################################################################################################################
+# Routine to get the Nutanix File Analytics injected
+###############################################################################################################################################################################
+
+function file_analytics_install() {
+  local  _ncli_softwaretype='FILE_ANALYTICS'
+  local _ncli_software_type='file_analytics'
+  local               _test
+
+  dependencies 'install' 'jq' || exit 13
+
+  log "IDEMPOTENCY: checking for ${_ncli_software_type} completed..."
+  _test=$(source /etc/profile.d/nutanix_env.sh \
+    && ncli --json=true software list \
+    | jq -r \
+      '.data[] | select(.softwareType == "'${_ncli_softwaretype}'") | select(.status == "COMPLETED") | .version')
+
+  if [[ ${_test} != "${FILE_ANALYTICS_VERSION}" ]]; then
+    log "Files ${FILE_ANALYTICS_VERSION} not completed. ${_test}"
+    ntnx_download "${_ncli_software_type}"
+  else
+    log "IDEMPOTENCY: Files ${FILE_ANALYTICS_VERSION} already completed."
+  fi
+}
+
+###############################################################################################################################################################################
+# Create File Server
+###############################################################################################################################################################################
+
+function create_file_server() {
+  local        CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --insecure '
+  local                 _loop=0
+  local
+  local      _fileserver_name="Bootcamp-FS"
+  local     _internal_nw_name="${1}"
+  local     _internal_nw_uuid
+  local     _external_nw_name="${2}"
+  local     _external_nw_uuid
+  local                 _test
+
+  log "IDEMPOTENCY: Checking PC API responds, curl failures are acceptable..."
+  prism_check 'PC' 2 0
+
+  if (( $? == 0 )) ; then
+    log "IDEMPOTENCY: PC API responds, skip."
+  else
+    log "Get cluster network and storage container UUIDs..."
+    _internal_nw_uuid=$(acli "net.get ${_internal_nw_name}" \
+      | grep "uuid" | cut -f 2 -d ':' | xargs)
+    _external_nw_uuid=$(acli "net.get ${_external_nw_name}" \
+      | grep "uuid" | cut -f 2 -d ':' | xargs)
+    _storage_default_uuid=$(ncli container ls name=${STORAGE_DEFAULT} \
+      | grep Uuid | grep -v Pool | cut -f 2 -d ':' | xargs)
+    log "${_internal_nw_name} network UUID: ${_internal_nw_uuid}"
+    log "${_external_nw_name} network UUID: ${_external_nw_uuid}"
+    log "${STORAGE_DEFAULT} storage container UUID: ${_storage_default_uuid}"
+
+  local _httpURL="https://localhost:9440/PrismGateway/services/rest/v1/vfilers"
+
+  HTTP_JSON_BODY=$(cat <<EOF
+{
+   "name":"${_fileserver_name}",
+   "numCalculatedNvms":"3",
+   "numVcpus":"4",
+   "memoryGiB":"12",
+   "internalNetwork":{
+      "subnetMask":"",
+      "defaultGateway":"",
+      "uuid":"${_internal_nw_uuid}",
+      "pool":[
+
+      ]
+   },
+   "externalNetworks":[
+      {
+         "subnetMask":"",
+         "defaultGateway":"",
+         "uuid":"${_external_nw_uuid}",
+         "pool":[
+
+         ]
+      }
+   ],
+   "windowsAdDomainName":"${AUTH_FQDN}",
+   "windowsAdUsername":"${AUTH_ADMIN_USER}",
+   "windowsAdPassword":"${AUTH_ADMIN_PASS}",
+   "dnsServerIpAddresses":[
+      "${AUTH_HOST}"
+   ],
+   "ntpServers":[
+      "${NTP_SERVERS}"
+   ],
+   "sizeGib":"1024",
+   "version":"${FILES_VERSION}",
+   "dnsDomainName":"${AUTH_FQDN}",
+   "nameServicesDTO":{
+      "adDetails":{
+         "windowsAdDomainName":"${AUTH_FQDN}",
+         "windowsAdUsername":"${AUTH_ADMIN_USER}",
+         "windowsAdPassword":"${AUTH_ADMIN_PASS}",
+         "addUserAsFsAdmin":true,
+         "organizationalUnit":"",
+         "preferredDomainController":"",
+         "overwriteUserAccount":false,
+         "rfc2307Enabled":false,
+         "useSameCredentialsForDns":false,
+         "protocolType":"1"
+      },
+      "nfsv4Domain":"",
+      "nfsVersion":"NFSV3V4",
+      "localDetails":{
+         "protocolType":"2"
+      }
+   },
+   "addUserAsFsAdmin":true,
+   "organizationalUnit":"",
+   "preferredDomainController":"",
+   "fsDnsOperationsDTO":{
+      "dnsOpType":"MS_DNS",
+      "dnsServer":"",
+      "dnsUserName":"${AUTH_ADMIN_USER}",
+      "dnsPassword":"${AUTH_ADMIN_PASS}"
+   }
+}
+EOF
+  )
+
+  # Start the create process
+  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+
+  # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
+  if [[ $_response -lt 1 ]]; then
+    # Check if Karbon has been enabled
+    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+    while [ $_response -ne 1 ]; do
+        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+    done
+    log "File Server has been created."
+  else
+    log "File Server is not being created, check the logs."
+  fi
+}
+
+
+###############################################################################################################################################################################
 # Routine to crerate the networks
 ###############################################################################################################################################################################
 function network_configure() {
