@@ -569,7 +569,7 @@ function ntnx_download() {
         _source_url="${FILES_URL}"
       fi
     ;;
-    FILE ANALYTICS | file analytics )
+    FILE_ANALYTICS | file_analytics )
       args_required 'FILE_ANALYTICS_VERSION'
       _meta_url="${FILE_ANALYTICS_METAURL}"
 
