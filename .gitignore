@@ -10,3 +10,5 @@ logs/
 master.zip
 original.release.json
 stageworkshop-master/
+venv/
+.idea/
