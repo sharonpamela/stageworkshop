@@ -220,25 +220,18 @@ function create_file_server() {
   local     _external_nw_name="${2}"
   local     _external_nw_uuid
   local                 _test
-
-  log "IDEMPOTENCY: Checking PC API responds, curl failures are acceptable..."
-  prism_check 'PC' 2 0
-
-  if (( $? == 0 )) ; then
-    log "IDEMPOTENCY: PC API responds, skip."
-  else
-    log "Get cluster network and storage container UUIDs..."
-    _internal_nw_uuid=$(acli "net.get ${_internal_nw_name}" \
-      | grep "uuid" | cut -f 2 -d ':' | xargs)
-    _external_nw_uuid=$(acli "net.get ${_external_nw_name}" \
-      | grep "uuid" | cut -f 2 -d ':' | xargs)
-    _storage_default_uuid=$(ncli container ls name=${STORAGE_DEFAULT} \
-      | grep Uuid | grep -v Pool | cut -f 2 -d ':' | xargs)
-    log "${_internal_nw_name} network UUID: ${_internal_nw_uuid}"
-    log "${_external_nw_name} network UUID: ${_external_nw_uuid}"
-    log "${STORAGE_DEFAULT} storage container UUID: ${_storage_default_uuid}"
-  fi
   local _httpURL="https://localhost:9440/PrismGateway/services/rest/v1/vfilers"
+
+  log "Get cluster network and storage container UUIDs..."
+  _internal_nw_uuid=$(acli "net.get ${_internal_nw_name}" \
+    | grep "uuid" | cut -f 2 -d ':' | xargs)
+  _external_nw_uuid=$(acli "net.get ${_external_nw_name}" \
+    | grep "uuid" | cut -f 2 -d ':' | xargs)
+  _storage_default_uuid=$(ncli container ls name=${STORAGE_DEFAULT} \
+    | grep Uuid | grep -v Pool | cut -f 2 -d ':' | xargs)
+  log "${_internal_nw_name} network UUID: ${_internal_nw_uuid}"
+  log "${_external_nw_name} network UUID: ${_external_nw_uuid}"
+  log "${STORAGE_DEFAULT} storage container UUID: ${_storage_default_uuid}"
 
   HTTP_JSON_BODY=$(cat <<EOF
 {
@@ -309,14 +302,14 @@ EOF
   )
 
   # Start the create process
-  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
 
   # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
   if [[ $_response -lt 1 ]]; then
     # Check if Karbon has been enabled
-    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
     while [ $_response -ne 1 ]; do
-        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
     done
     log "File Server has been created."
   else
