@@ -304,7 +304,7 @@ EOF
 
 echo $HTTP_JSON_BODY
 
-curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST ${HTTP_JSON_BODY} ${_httpURL}
+curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST $HTTP_JSON_BODY $_httpURL
 
   # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
 #  if [[ $_response -lt 1 ]]; then
