@@ -210,10 +210,10 @@ function file_analytics_install() {
 # Create File Server
 ###############################################################################################################################################################################
 
-function create_file_server(){
-  local        CURL_HTTP_OPTS=" --max-time 25 --silent --header Content-Type:application/json --insecure "
-  local                 _loop=0
-  local
+function create_file_server() {
+  #local        CURL_HTTP_OPTS=" --max-time 25 --silent --header Content-Type:application/json --insecure "
+  #local                 _loop=0
+  #local
   local      _fileserver_name="Bootcamp-FS"
   local     _internal_nw_name="${1}"
   local     _internal_nw_uuid
@@ -302,19 +302,21 @@ EOF
   )
 
   # Start the create process
-  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+#  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+
+curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}
 
   # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
-  if [[ $_response -lt 1 ]]; then
-    # Check if Karbon has been enabled
-    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
-    while [ $_response -ne 1 ]; do
-        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
-    done
-    log "File Server has been created."
-  else
-    log "File Server is not being created, check the logs."
-  fi
+#  if [[ $_response -lt 1 ]]; then
+#    # Check if Karbon has been enabled
+#    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+#    while [ $_response -ne 1 ]; do
+#        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+#    done
+#    log "File Server has been created."
+#  else
+#    log "File Server is not being created, check the logs."
+#  fi
 }
 
 
