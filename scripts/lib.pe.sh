@@ -232,7 +232,7 @@ function create_file_server() {
   log "${STORAGE_DEFAULT} storage container UUID: ${_storage_default_uuid}"
 
   HTTP_JSON_BODY=$(cat <<EOF
-{
+-d {
    "name":"${_fileserver_name}",
    "numCalculatedNvms":"3",
    "numVcpus":"4",
@@ -304,7 +304,7 @@ EOF
 
 echo $HTTP_JSON_BODY
 
-curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}
+curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST ${HTTP_JSON_BODY} ${_httpURL}
 
   # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
 #  if [[ $_response -lt 1 ]]; then
