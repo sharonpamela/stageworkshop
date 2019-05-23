@@ -214,6 +214,7 @@ function create_file_server() {
   #local        CURL_HTTP_OPTS=" --max-time 25 --silent --header Content-Type:application/json --insecure "
   #local                 _loop=0
   #local
+  local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
   local      _fileserver_name="Bootcamp-FS"
   local     _internal_nw_name="${1}"
   local     _internal_nw_uuid
@@ -303,6 +304,8 @@ EOF
 
   # Start the create process
 #  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+
+echo $HTTP_JSON_BODY
 
 curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}
 
