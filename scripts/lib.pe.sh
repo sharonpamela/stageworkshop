@@ -215,7 +215,7 @@ function create_file_server() {
   #local                 _loop=0
   #local
   local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
-  local      _fileserver_name="Bootcamp-FS"
+  local      _fileserver_name="BootcampFS"
   local     _internal_nw_name="${1}"
   local     _internal_nw_uuid
   local     _external_nw_name="${2}"
