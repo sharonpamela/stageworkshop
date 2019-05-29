@@ -213,33 +213,17 @@ function karbon_enable() {
 function karbon_image_download() {
   local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
   local _loop=0
-  local _json_data_set_enable="{\"value\":\"{\\\".oid\\\":\\\"ClusterManager\\\",\\\".method\\\":\\\"enable_service_with_prechecks\\\",\\\".kwargs\\\":{\\\"service_list_json\\\":\\\"{\\\\\\\"service_list\\\\\\\":[\\\\\\\"KarbonUIService\\\\\\\",\\\\\\\"KarbonCoreService\\\\\\\"]}\\\"}}\"}"
-  local _json_is_enable="{\"value\":\"{\\\".oid\\\":\\\"ClusterManager\\\",\\\".method\\\":\\\"is_service_enabled\\\",\\\".kwargs\\\":{\\\"service_name\\\":\\\"KarbonUIService\\\"}}\"} "
-  local _httpURL="https://localhost:7050/acs/image/download"
+  local _startDownload="https://localhost:7050/acs/image/download"
+  local _getuuidDownload="https://localhost:7050/acs/image/list"
+  
+  # Create the Basic Authentication using base6 commands
+  basicauth=$(echo "admin:${PE_PASSWORD}" | base64)
 
-  # Start the enablement process
-  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL}| grep "[true, null]" | wc -l)
+  # Call the UUID URL so we have the right UUID for the image
+  $UUID_Centos=$(curl )
+  # Use the UUID to download the image
 
-  # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
-  if [[ $_response -eq 1 ]]; then
-    # Check if Karbon has been enabled
-    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "[true, null]" | wc -l)
-    while [ $_response -ne 1 ]; do
-        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "[true, null]" | wc -l)
-    done
-    log "Karbon has been enabled."
-  else
-    log "Retrying to enable Karbon one more time."
-    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL}| grep "[true, null]" | wc -l)
-    if [[ $_response -eq 1 ]]; then
-      _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "[true, null]" | wc -l)
-      if [ $_response -lt 1 ]; then
-        log "Karbon CentOS image has not been downloaded."
-      else
-        log "Karbon CentOS image has been downloaded."
-      fi
-    fi
-  fi
+
 }
 
 ###############################################################################################################################################################################
