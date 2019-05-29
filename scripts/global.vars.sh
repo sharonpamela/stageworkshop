@@ -35,7 +35,7 @@ QCOW2_IMAGES=(\
    Windows2012R2.qcow2 \
    Windows10-1709.qcow2 \
    ToolsVM.qcow2 \
-   ERA-Server-build-1.0.1.qcow2 \
+   ERA-Server-build-1.0.1.4.qcow2 \
    hycu-3.5.0-6253.qcow2 \
 )
 ISO_IMAGES=(\
