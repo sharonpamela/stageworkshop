@@ -36,6 +36,7 @@ QCOW2_IMAGES=(\
    Windows10-1709.qcow2 \
    ToolsVM.qcow2 \
    ERA-Server-build-1.0.1.4.qcow2 \
+   MSSQL-2016-VM.qcow2 \
    hycu-3.5.0-6253.qcow2 \
 )
 ISO_IMAGES=(\
