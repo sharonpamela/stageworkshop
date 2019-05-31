@@ -6,6 +6,9 @@
 # 12th of April 2019 - Willem Essenstam
 # Added a "-d" character in the flow_enable so the command would run.
 # Changed the Karbon Eanable function so it also checks that Karbon has been enabled. Some small typos changed so the Karbon part should work
+#
+# 31-05-2019 - Willem Essenstam
+# Added the download bits for the Centos Image for Karbon
 ###############################################################################################################################################################################
 
 
@@ -220,8 +223,19 @@ function karbon_image_download() {
   basicauth=$(echo "admin:${PE_PASSWORD}" | base64)
 
   # Call the UUID URL so we have the right UUID for the image
-  $UUID_Centos=$(curl )
+  uuid=$(curl -X GET -H "X-NTNX-AUTH: Basic ${_auth}" https://localhost:7050/acs/image/list $CURL_HTTP_OPTS | jq '.[].uuid' | tr -d \/\")
+
   # Use the UUID to download the image
+  response=$(curl -X POST $_startDownload -d "{\"uuid\":\"$uuid\"}" -H "X-NTNX-AUTH: Basic $_auth" $CURL_HTTP_OPTS)
+  if [ -z $response ]; then
+    log "Downlaod of the CenOS image for Karbon has been started. Trying one more time..."
+    response=$(curl -X POST $_startDownload -d "{\"uuid\":\"$uuid\"}" -H "X-NTNX-AUTH: Basic $_auth" $CURL_HTTP_OPTS)
+    if [ -z $response ]; then
+      log "Download of CentOS image for Karbon failed... Please run manually."
+    fi
+  else
+    log "Download of CentOS image for Karbon has started..."
+  fi
 
 
 }
