@@ -38,6 +38,7 @@ QCOW2_IMAGES=(\
    ERA-Server-build-1.0.1.4.qcow2 \
    MSSQL-2016-VM.qcow2 \
    hycu-3.5.0-6253.qcow2 \
+   VeeamAvailability_1.0.457.vmdk \
 )
 ISO_IMAGES=(\
    CentOS7.iso \
@@ -47,6 +48,7 @@ ISO_IMAGES=(\
    Nutanix-VirtIO-1.1.3.iso \
    SQLServer2014SP3.iso \
    XenApp_and_XenDesktop_7_18.iso \
+   VeeamBR_9.5.4.2615.Update4.iso \
 )
 
 # shellcheck disable=2206
