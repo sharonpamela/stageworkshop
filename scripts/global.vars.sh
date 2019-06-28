@@ -180,9 +180,9 @@ case "${OCTET[0]}.${OCTET[1]}" in
        'https://s3.amazonaws.com/get-ahv-images/AutoDC2.qcow2' \
      )
     PC_DATA='http://10.42.194.11/workshop_staging/seedPC.zip'
-    NW1_SUBNET="${IPV4_PREFIX}.$((${OCTET[3]} - 6))/26"
-    NW1_DHCP_START=${IPV4_PREFIX}.$((${OCTET[3]} + 33))
-    NW1_DHCP_END=${IPV4_PREFIX}.$((${OCTET[3]} + 53))
+    #NW1_SUBNET="${IPV4_PREFIX}.$((${OCTET[3]} - 6))/26"
+    #NW1_DHCP_START=${IPV4_PREFIX}.$((${OCTET[3]} + 33))
+    #NW1_DHCP_END=${IPV4_PREFIX}.$((${OCTET[3]} + 53))
     DNS_SERVERS="10.42.196.10,10.42.194.10"
       ;;
   10.132 ) # https://sewiki.nutanix.com/index.php/SH-COLO-IP-ADDR
