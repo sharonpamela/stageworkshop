@@ -218,26 +218,26 @@ function karbon_image_download() {
   local _loop=0
   local _startDownload="https://localhost:7050/acs/image/download"
   local _getuuidDownload="https://localhost:7050/acs/image/list"
-  
+
   # Create the Basic Authentication using base6 commands
-  basicauth=$(echo "admin:${PE_PASSWORD}" | base64)
+  _auth=$(echo "admin:${PE_PASSWORD}" | base64)
 
   # Call the UUID URL so we have the right UUID for the image
-  uuid=$(curl -X GET -H "X-NTNX-AUTH: Basic ${_auth}" https://localhost:7050/acs/image/list $CURL_HTTP_OPTS | jq '.[].uuid' | tr -d \/\")
+  uuid=$(curl -X GET -H "X-NTNX-AUTH: Basic ${_auth}" https://localhost:7050/acs/image/list $CURL_HTTP_OPTS | jq '.[0].uuid' | tr -d \/\")
+  log "UUID for The Karbon image is: $uuid"
 
   # Use the UUID to download the image
-  response=$(curl -X POST $_startDownload -d "{\"uuid\":\"$uuid\"}" -H "X-NTNX-AUTH: Basic $_auth" $CURL_HTTP_OPTS)
+  response=$(curl -X POST ${_startDownload} -d "{\"uuid\":\"${uuid}\"}" -H "X-NTNX-AUTH: Basic ${_auth}" ${CURL_HTTP_OPTS})
+
   if [ -z $response ]; then
-    log "Downlaod of the CenOS image for Karbon has been started. Trying one more time..."
-    response=$(curl -X POST $_startDownload -d "{\"uuid\":\"$uuid\"}" -H "X-NTNX-AUTH: Basic $_auth" $CURL_HTTP_OPTS)
+    log "Download of the CenOS image for Karbon has not been started. Trying one more time..."
+    response=$(curl -X POST ${_startDownload} -d "{\"uuid\":\"${uuid}\"}" -H "X-NTNX-AUTH: Basic ${_auth}" ${CURL_HTTP_OPTS})
     if [ -z $response ]; then
       log "Download of CentOS image for Karbon failed... Please run manually."
     fi
   else
     log "Download of CentOS image for Karbon has started..."
   fi
-
-
 }
 
 ###############################################################################################################################################################################
