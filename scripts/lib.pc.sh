@@ -50,36 +50,6 @@ function flow_enable() {
 ###############################################################################################################################################################################
 # Routine to be run/loop till yes we are ok.
 ###############################################################################################################################################################################
-
-##TODO! Needs rewriting as we need to change the url to https://localhost:9440/api/nutanix/v3/tasks/<TASK_ID>
-## This will have a result in the following way:
-# {
-#    "status": "RUNNING",
-#    "last_update_time": "2019-07-08T08:38:04Z",
-#    "logical_timestamp": 2,
-#    "entity_reference_list": [],
-#    "creation_time": "2019-07-08T08:36:01Z",
-#    "cluster_reference": {
-#        "kind": "cluster",
-#        "uuid": "5be7fd77-5161-49b5-8be6-b6280c62721f"
-#    },
-#    "subtask_reference_list": [
-#        {
-#            "kind": "task",
-#            "uuid": "656210bb-b24d-495b-946a-390566b1c269"
-#        },
-#        {
-#            "kind": "task",
-#            "uuid": "796a55c4-7662-4155-be35-8526c4db042c"
-#        }
-#    ],
-#    "progress_message": "LCM operations",
-#    "creation_time_usecs": 1562574961570658,
-#    "operation_type": "kLcmRootTask",
-#    "percentage_complete": 20,
-#    "api_version": "3.1",
-#    "uuid": "bf672a00-13e0-42e0-bbb6-dba47a9a1cd4"
-#}
 # Need to grab the percentage_complete value including the status to make disissions
 
 function loop(){
@@ -87,21 +57,23 @@ function loop(){
   local _attempts=30
   local _loops=0
   local _sleep=60
-  local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
+  local CURL_HTTP_OPTS=" --max-time 25 --silent -H 'Content-Type:application/json' -H 'Accept:application/json'  --insecure "
 
   # What is the progress of the taskid??
   while true; do
     (( _loops++ ))
     # Get the progress of the task
-    _progress=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} ${_url_progress}?filterCriteria=parent_task_uuid%3D%3D${_task_id} | jq '.entities[0].percentageCompleted' 2>nul | tr -d \")
+    _progress=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} ${_url_progress}/${_task_id} | jq '.percentage_complete' 2>nul | tr -d \")
+    echo "Progress of the TASK with task id ${_task_id}: ${_progress}"
+
     if (( ${_progress} == 100 )); then
-      log "The step has been succesfuly run"
+      echo "The step has been succesfuly run"
       break;
     elif (( ${_loops} > ${_attempts} )); then
-      log "Warning ${_error} @${1}: Giving up after ${_loop} tries."
+      echo "Warning ${_error} @${1}: Giving up after ${_loop} tries."
       return ${_error}
     else
-      log "Still running... loop $_loops/$_attempts. Step is at ${_progress}% ...Sleeping ${_sleep} seconds"
+      echo "Still running... loop $_loops/$_attempts. Step is at ${_progress}% ...Sleeping ${_sleep} seconds"
       sleep ${_sleep}
     fi
   done
@@ -114,7 +86,7 @@ function loop(){
 function lcm() {
 
   local _url_lcm='https://localhost:9440/PrismGateway/services/rest/v1/genesis'
-  local _url_progress='https://localhost:9440/PrismGateway/services/rest/v1/progress_monitors'
+  local _url_progress='https://localhost:9440/api/nutanix/v3/tasks'
   local _url_groups='https://localhost:9440/api/nutanix/v3/groups'
   local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
 
@@ -157,68 +129,13 @@ function lcm() {
         else
               #''_V2: run the other V2 API call to get the UUIDs of the to be updated software parts
               # Grab the installed version of the software first UUIDs
-              curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST -d '{
-                "entity_type": "lcm_entity_v2",
-                "group_member_count": 500,
-                "group_member_attributes": [{
-                  "attribute": "id"
-                }, {
-                  "attribute": "uuid"
-                }, {
-                  "attribute": "entity_model"
-                }, {
-                  "attribute": "version"
-                }, {
-                  "attribute": "location_id"
-                }, {
-                  "attribute": "entity_class"
-                }, {
-                  "attribute": "description"
-                }, {
-                  "attribute": "last_updated_time_usecs"
-                }, {
-                  "attribute": "request_version"
-                }, {
-                  "attribute": "_master_cluster_uuid_"
-                }, {
-                  "attribute": "entity_type"
-                }, {
-                  "attribute": "single_group_uuid"
-                }],
-                "query_name": "lcm:EntityGroupModel",
-                "grouping_attribute": "location_id",
-                "filter_criteria": "entity_model!=AOS;entity_model!=NCC;entity_model!=PC;_master_cluster_uuid_==[no_val]"
-              }'  $_url_groups > reply_json_uuid.json
+              curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST -d '{"entity_type": "lcm_entity_v2","group_member_count": 500,"group_member_attributes": [{"attribute": "id"}, {"attribute": "uuid"}, {"attribute": "entity_model"}, {"attribute": "version"},{"attribute": "location_id"}, {"attribute": "entity_class"}, {"attribute": "description"}, {"attribute": "last_updated_time_usecs"},{"attribute": "request_version"}, {"attribute": "_master_cluster_uuid_"}, {"attribute": "entity_type"}, {"attribute": "single_group_uuid"}],"query_name": "lcm:EntityGroupModel","grouping_attribute": "location_id","filter_criteria": "entity_model!=AOS;entity_model!=NCC;entity_model!=PC;_master_cluster_uuid_==[no_val]"}'  $_url_groups > reply_json_uuid.json
 
               # Fill the uuid array with the correct values
               uuid_arr=($(jq '.group_results[].entity_results[].data[] | select (.name=="uuid") | .values[0].values[0]' reply_json_uuid.json | sort -u | tr "\"" " " | tr -s " "))
 
               # Grab the available updates from the PC after LCMm has run
-              curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST -d '{
-                "entity_type": "lcm_available_version_v2",
-                "group_member_count": 500,
-                "group_member_attributes": [{
-                  "attribute": "uuid"
-                }, {
-                  "attribute": "entity_uuid"
-                }, {
-                  "attribute": "entity_class"
-                }, {
-                  "attribute": "status"
-                }, {
-                  "attribute": "version"
-                }, {
-                  "attribute": "dependencies"
-                }, {
-                  "attribute": "single_group_uuid"
-                }, {
-                  "attribute": "_master_cluster_uuid_"
-                }, {
-                  "attribute": "order"
-                }],
-                "query_name": "lcm:VersionModel",
-                "filter_criteria": "_master_cluster_uuid_==[no_val]"
-              }' $_url_groups > reply_json_ver.json
+              curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST -d '{"entity_type": "lcm_available_version_v2","group_member_count": 500,"group_member_attributes": [{"attribute": "uuid"},{"attribute": "entity_uuid"}, {"attribute": "entity_class"}, {"attribute": "status"}, {"attribute": "version"}, {"attribute": "dependencies"},{"attribute": "single_group_uuid"}, {"attribute": "_master_cluster_uuid_"}, {"attribute": "order"}],"query_name": "lcm:VersionModel","filter_criteria": "_master_cluster_uuid_==[no_val]"}' $_url_groups > reply_json_ver.json
 
               # Grabbing the versions of the UUID and put them in a versions array
               for uuid in "${uuid_arr[@]}"
@@ -244,8 +161,8 @@ function lcm() {
        while [ $count -lt ${#uuid_arr[@]} ]
        do
           _json_data+="[\\\"${uuid_arr[$count]}\\\",\\\"${version_ar[$count]}\\\"],"
+          echo "Found UUID ${uuid_arr[$count]} and version ${version_ar[$count]}"
           let count=count+1
-          log "Found UUID ${uuid_arr[$count]} and version ${version_ar[$count]}"
         done
 
        # Remove the last "," as we don't need it.
