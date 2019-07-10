@@ -57,7 +57,7 @@ function loop(){
   local _attempts=30
   local _loops=0
   local _sleep=60
-  local CURL_HTTP_OPTS=" --max-time 25 --silent -H 'Content-Type:application/json' -H 'Accept:application/json'  --insecure "
+  local CURL_HTTP_OPTS=" --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure "
 
   # What is the progress of the taskid??
   while true; do
@@ -112,9 +112,9 @@ function lcm() {
 
        # Issue is taht after the LCM inventory the LCM will be updated to a version 2.0 and the API call needs to change!!!
        # We need to figure out if we are running V1 or V2!
-       lcm_version=$(curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST -d '{"value":"{\".oid\":\"LifeCycleManager\",\".method\":\"lcm_framework_rpc\",\".kwargs\":{\"method_class\":\"LcmFramework\",\"method\":\"get_config\"}}"}' -H 'Content-Type: application/json'  ${_url_lcm} | jq '.value' | tr -d \\ | sed 's/^"\(.*\)"$/\1/' | sed 's/.return/return/g' | jq '.return.lcm_cpdb_table_def_list.entity' | tr -d \"| grep "lcm_entity_v2" | wc -l)
+       lcm_version=$(curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST -d '{"value":"{\".oid\":\"LifeCycleManager\",\".method\":\"lcm_framework_rpc\",\".kwargs\":{\"method_class\":\"LcmFramework\",\"method\":\"get_config\"}}"}'  ${_url_lcm} | jq '.value' | tr -d \\ | sed 's/^"\(.*\)"$/\1/' | sed 's/.return/return/g' | jq '.return.lcm_cpdb_table_def_list.entity' | tr -d \"| grep "lcm_entity_v2" | wc -l)
 
-       if [ $lcm_version -lt 1]; then
+       if [ $lcm_version -lt 1 ]; then
               # V1: Run the Curl command and save the oputput in a temp file
               curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST -d '{"entity_type": "lcm_available_version","grouping_attribute": "entity_uuid","group_member_count": 1000,"group_member_attributes": [{"attribute": "uuid"},{"attribute": "entity_uuid"},{"attribute": "entity_class"},{"attribute": "status"},{"attribute": "version"},{"attribute": "dependencies"},{"attribute": "order"}]}'  $_url_groups > reply_json.json
 
@@ -129,7 +129,7 @@ function lcm() {
         else
               #''_V2: run the other V2 API call to get the UUIDs of the to be updated software parts
               # Grab the installed version of the software first UUIDs
-              curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST -d '{"entity_type": "lcm_entity_v2","group_member_count": 500,"group_member_attributes": [{"attribute": "id"}, {"attribute": "uuid"}, {"attribute": "entity_model"}, {"attribute": "version"},{"attribute": "location_id"}, {"attribute": "entity_class"}, {"attribute": "description"}, {"attribute": "last_updated_time_usecs"},{"attribute": "request_version"}, {"attribute": "_master_cluster_uuid_"}, {"attribute": "entity_type"}, {"attribute": "single_group_uuid"}],"query_name": "lcm:EntityGroupModel","grouping_attribute": "location_id","filter_criteria": "entity_model!=AOS;entity_model!=NCC;entity_model!=PC;_master_cluster_uuid_==[no_val]"}'  $_url_groups > reply_json_uuid.json
+              curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST -d '{"entity_type": "lcm_entity_v2","group_member_count": 500,"group_member_attributes": [{"attribute": "id"}, {"attribute": "uuid"}, {"attribute": "entity_model"}, {"attribute": "version"}, {"attribute": "location_id"}, {"attribute": "entity_class"}, {"attribute": "description"}, {"attribute": "last_updated_time_usecs"}, {"attribute": "request_version"}, {"attribute": "_master_cluster_uuid_"}, {"attribute": "entity_type"}, {"attribute": "single_group_uuid"}],"query_name": "lcm:EntityGroupModel","grouping_attribute": "location_id","filter_criteria": "entity_model!=AOS;entity_model!=NCC;entity_model!=PC;_master_cluster_uuid_==[no_val]"}' $_url_groups > reply_json_uuid.json
 
               # Fill the uuid array with the correct values
               uuid_arr=($(jq '.group_results[].entity_results[].data[] | select (.name=="uuid") | .values[0].values[0]' reply_json_uuid.json | sort -u | tr "\"" " " | tr -s " "))
@@ -142,12 +142,8 @@ function lcm() {
                 do
                   # Get the latest version from the to be updated uuid
                   version_ar+=($(jq --arg uuid "$uuid" '.group_results[].entity_results[] | select (.data[].values[].values[]==$uuid) .data[] | select (.name=="version") .values[].values[]' reply_json_ver.json | tail -1 | tr -d \"))
-
-                  # Get the UUID corresponding with the version found earlier
-                  uuid_arr_new+=($(jq --arg uuid "$uuid" '.group_results[].entity_results[] | select (.data[].values[].values[]==$uuid) .data[] | select (.name=="uuid") .values[].values[]' reply_json_ver.json | tail -1 | tr -d \"))
                 done
               # Copy the right info into the to be used array
-              uuid_arr=("${uuid_arr_new[@]}")
         fi
 
        # Set the parameter to create the ugrade plan
@@ -161,7 +157,7 @@ function lcm() {
        while [ $count -lt ${#uuid_arr[@]} ]
        do
           _json_data+="[\\\"${uuid_arr[$count]}\\\",\\\"${version_ar[$count]}\\\"],"
-          echo "Found UUID ${uuid_arr[$count]} and version ${version_ar[$count]}"
+          log "Found UUID ${uuid_arr[$count]} and version ${version_ar[$count]}"
           let count=count+1
         done
 
@@ -173,11 +169,6 @@ function lcm() {
 
        # Run the generate plan task
        _task_id=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST $_json_data ${_url_lcm})
-
-       # Remove the temp json files as we don't need it anymore
-       rm -rf reply_json.json
-       rm -rf reply_json_ver.json
-       rm -rf reply_json_uuid.json
        
        # Notify the log server that the LCM has created a plan
        log "LCM Inventory has created a plan"
@@ -198,12 +189,17 @@ function lcm() {
             log "LCM Upgrade has encountered an error!!!!"
         else
             # Notify the logserver that we are starting the LCM Upgrade
-            log "LCM Upgrade starting..."
+            log "LCM Upgrade starting...Process may take up to 30 minutes!!!"
 
             # Run the progess checker
             loop
         fi
   fi
+
+  # Remove the temp json files as we don't need it anymore
+       rm -rf reply_json.json
+       rm -rf reply_json_ver.json
+       rm -rf reply_json_uuid.json
 
 }
 
