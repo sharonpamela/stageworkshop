@@ -64,16 +64,15 @@ function loop(){
     (( _loops++ ))
     # Get the progress of the task
     _progress=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} ${_url_progress}/${_task_id} | jq '.percentage_complete' 2>nul | tr -d \")
-    echo "Progress of the TASK with task id ${_task_id}: ${_progress}"
 
     if (( ${_progress} == 100 )); then
-      echo "The step has been succesfuly run"
+      log "The step has been succesfuly run"
       break;
     elif (( ${_loops} > ${_attempts} )); then
-      echo "Warning ${_error} @${1}: Giving up after ${_loop} tries."
+      log "Warning ${_error} @${1}: Giving up after ${_loop} tries."
       return ${_error}
     else
-      echo "Still running... loop $_loops/$_attempts. Step is at ${_progress}% ...Sleeping ${_sleep} seconds"
+      log "Still running... loop $_loops/$_attempts. Step is at ${_progress}% ...Sleeping ${_sleep} seconds"
       sleep ${_sleep}
     fi
   done
