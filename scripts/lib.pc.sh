@@ -52,6 +52,8 @@ function flow_enable() {
 ###############################################################################################################################################################################
 # Need to grab the percentage_complete value including the status to make disissions
 
+# TODO: Also look at the status!!
+
 function loop(){
 
   local _attempts=40
