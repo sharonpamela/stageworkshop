@@ -11,10 +11,11 @@ begin
 # - Calm || Bootcamp || Citrix || Summit
 # - PC #.#
 WORKSHOPS=(\
-"Bootcamp (AOS 5.10+/AHV PC 5.10+) = Current (AutoDC2)" \
-#"Citrix Desktop on AHV Workshop (AOS 5.10+/AHV PC 5.10+) = Development" \
-"Tech Summit 2019 (AOS 5.10+/AHV PC 5.10+) = Development" \
-"Calm Workshop (AOS 5.8.x/AHV PC 5.8.x) = Stable (AutoDC2)" \
+"Bootcamp (AOS 5.10+/AHV PC 5.10+) = Current" \
+"Tech Summit 2019 (AOS 5.10+/AHV PC 5.10+) = Current" \
+"Calm Workshop (AOS 5.8.x/AHV PC 5.8.x) = Stable" \
+"Development Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
+#"Citrix Desktop on AHV Workshop (AOS 5.11+/AHV PC 5.11+) = Development" \
 ) # Adjust function stage_clusters, below, for file/script mappings as needed
 
 function stage_clusters() {
@@ -55,12 +56,14 @@ function stage_clusters() {
     _pc_launch=${_pe_launch}
   fi
   if (( $(echo ${_workshop} | grep -i Citrix | wc ${WC_ARG}) > 0 )); then
-    _pe_launch='stage_citrixhow.sh'
-    _pc_launch='stage_citrixhow_pc.sh'
+    _libraries+='lib.pe.sh lib.pc.sh'
+    _pe_launch='citrix.sh'
+    _pc_launch=${_pe_launch}
   fi
   if (( $(echo ${_workshop} | grep -i Files | wc ${WC_ARG}) > 0 )); then
     _libraries+='lib.pe.sh'
     _pe_launch='files.sh'
+    _pc_launch=${_pe_launch}
   fi
   if (( $(echo ${_workshop} | grep -i Summit | wc ${WC_ARG}) > 0 )); then
     _libraries+='lib.pe.sh lib.pc.sh'

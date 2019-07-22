@@ -2,7 +2,7 @@
 
 # shellcheck disable=SC2034
 RELEASE='release.json'
-PC_DEV_VERSION='5.10.3'
+PC_DEV_VERSION='5.11'
 PC_CURRENT_VERSION='5.10.5'
 PC_STABLE_VERSION='5.8.2'
 FILES_VERSION='3.5.0'
@@ -90,8 +90,8 @@ AUTH_ADMIN_GROUP='SSP Admins'
 case "${OCTET[0]}.${OCTET[1]}" in
 
   10.55 ) # HPOC us-east = DUR
-    PC_DEV_METAURL='http://10.55.251.38/workshop_staging/pcdeploy-5.10.3.json'
-    PC_DEV_URL='http://10.55.251.38/workshop_staging/euphrates-5.10.3-stable-prism_central.tar'
+    PC_DEV_METAURL='http://10.55.251.38/workshop_staging/euphrates-5.11-stable-prism_central-metadata.json'
+    PC_DEV_URL='http://10.55.251.38/workshop_staging/euphrates-5.11-stable-prism_central.tar'
     PC_CURRENT_METAURL='http://10.55.251.38/workshop_staging/pcdeploy-5.10.5.json'
     PC_CURRENT_URL='http://10.55.251.38/workshop_staging/euphrates-5.10.5-stable-prism_central.tar'
     PC_STABLE_METAURL='http://10.55.251.38/workshop_staging/pc_deploy-5.8.2.json'
@@ -121,8 +121,8 @@ case "${OCTET[0]}.${OCTET[1]}" in
     DNS_SERVERS='10.55.251.10,10.55.251.11'
     ;;
   10.42 ) # HPOC us-west = PHX
-    PC_DEV_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.3.json'
-    PC_DEV_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.3-stable-prism_central.tar'
+    PC_DEV_METAURL='http://10.42.194.11/workshop_staging/euphrates-5.11-stable-prism_central-metadata.json'
+    PC_DEV_URL='http://10.42.194.11/workshop_staging/euphrates-5.11-stable-prism_central.tar'
     PC_CURRENT_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.5.json'
     PC_CURRENT_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.5-stable-prism_central.tar'
     PC_STABLE_METAURL='http://10.42.194.11/workshop_staging/pc_deploy-5.8.2.json'
@@ -152,8 +152,8 @@ case "${OCTET[0]}.${OCTET[1]}" in
     DNS_SERVERS='10.42.196.10,10.42.194.10'
     ;;
   10.38 ) # HPOC us-west = PHX 1-Node Clusters
-    PC_DEV_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.3.json'
-    PC_DEV_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.3-stable-prism_central.tar'
+    PC_DEV_METAURL='http://10.42.194.11/workshop_staging/euphrates-5.11-stable-prism_central-metadata.json'
+    PC_DEV_URL='http://10.42.194.11/workshop_staging/euphrates-5.11-stable-prism_central.tar'
     PC_CURRENT_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.5.json'
     PC_CURRENT_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.5-stable-prism_central.tar'
     PC_STABLE_METAURL='http://10.42.194.11/workshop_staging/pc_deploy-5.8.2.json'
