@@ -2,6 +2,11 @@
 # use bash -x to debug command substitution and evaluation instead of echo.
 DEBUG=
 
+# Source Workshop common routines + global variables
+. scripts/lib.common.sh
+. scripts/global.vars.sh
+begin
+
 # For WORKSHOPS keyword mappings to scripts and variables, please use:
 # - Calm || Bootcamp || Citrix || Summit
 # - PC #.#
@@ -23,6 +28,7 @@ function stage_clusters() {
   local    _pc_launch # will be transferred and executed on PC
   local       _sshkey=${SSH_PUBKEY}
   #local       _wc_arg='--lines'
+  local     _wc_arg=${WC_ARG}
   local     _workshop=${WORKSHOPS[$((${WORKSHOP_NUM}-1))]}
 
   # Map to latest and greatest of each point release
@@ -51,6 +57,10 @@ function stage_clusters() {
   if (( $(echo ${_workshop} | grep -i Citrix | wc ${WC_ARG}) > 0 )); then
     _pe_launch='stage_citrixhow.sh'
     _pc_launch='stage_citrixhow_pc.sh'
+  fi
+  if (( $(echo ${_workshop} | grep -i Files | wc ${WC_ARG}) > 0 )); then
+    _libraries+='lib.pe.sh'
+    _pe_launch='files.sh'
   fi
   if (( $(echo ${_workshop} | grep -i Summit | wc ${WC_ARG}) > 0 )); then
     _libraries+='lib.pe.sh lib.pc.sh'
@@ -298,11 +308,6 @@ function select_workshop() {
 }
 
 #__main__
-
-# Source Workshop common routines + global variables
-. scripts/lib.common.sh
-. scripts/global.vars.sh
-begin
 
     _VALIDATE='Validate Staged Clusters'
 _CLUSTER_FILE='Cluster Input File'
