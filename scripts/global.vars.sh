@@ -3,7 +3,7 @@
 # shellcheck disable=SC2034
 RELEASE='release.json'
 PC_DEV_VERSION='5.10.3'
-PC_CURRENT_VERSION='5.10.3'
+PC_CURRENT_VERSION='5.10.5'
 PC_STABLE_VERSION='5.8.2'
 FILES_VERSION='3.5.0'
 FILE_ANALYTICS_VERSION='1.0.1'
@@ -92,8 +92,8 @@ case "${OCTET[0]}.${OCTET[1]}" in
   10.55 ) # HPOC us-east = DUR
     PC_DEV_METAURL='http://10.55.251.38/workshop_staging/pcdeploy-5.10.3.json'
     PC_DEV_URL='http://10.55.251.38/workshop_staging/euphrates-5.10.3-stable-prism_central.tar'
-    PC_CURRENT_METAURL='http://10.55.251.38/workshop_staging/pcdeploy-5.10.3.json'
-    PC_CURRENT_URL='http://10.55.251.38/workshop_staging/euphrates-5.10.3-stable-prism_central.tar'
+    PC_CURRENT_METAURL='http://10.55.251.38/workshop_staging/pcdeploy-5.10.5.json'
+    PC_CURRENT_URL='http://10.55.251.38/workshop_staging/euphrates-5.10.5-stable-prism_central.tar'
     PC_STABLE_METAURL='http://10.55.251.38/workshop_staging/pc_deploy-5.8.2.json'
     PC_STABLE_URL='http://10.55.251.38/workshop_staging/euphrates-5.8.2-stable-prism_central.tar'
     FILES_METAURL='http://10.55.251.38/workshop_staging/afs-3.5.0.json'
@@ -123,8 +123,8 @@ case "${OCTET[0]}.${OCTET[1]}" in
   10.42 ) # HPOC us-west = PHX
     PC_DEV_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.3.json'
     PC_DEV_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.3-stable-prism_central.tar'
-    PC_CURRENT_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.3.json'
-    PC_CURRENT_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.3-stable-prism_central.tar'
+    PC_CURRENT_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.5.json'
+    PC_CURRENT_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.5-stable-prism_central.tar'
     PC_STABLE_METAURL='http://10.42.194.11/workshop_staging/pc_deploy-5.8.2.json'
     PC_STABLE_URL='http://10.42.194.11/workshop_staging/euphrates-5.8.2-stable-prism_central.tar'
     FILES_METAURL='http://10.42.194.11/workshop_staging/afs-3.5.0.json'
@@ -154,8 +154,8 @@ case "${OCTET[0]}.${OCTET[1]}" in
   10.38 ) # HPOC us-west = PHX 1-Node Clusters
     PC_DEV_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.3.json'
     PC_DEV_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.3-stable-prism_central.tar'
-    PC_CURRENT_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.3.json'
-    PC_CURRENT_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.3-stable-prism_central.tar'
+    PC_CURRENT_METAURL='http://10.42.194.11/workshop_staging/pcdeploy-5.10.5.json'
+    PC_CURRENT_URL='http://10.42.194.11/workshop_staging/euphrates-5.10.5-stable-prism_central.tar'
     PC_STABLE_METAURL='http://10.42.194.11/workshop_staging/pc_deploy-5.8.2.json'
     PC_STABLE_URL='http://10.42.194.11/workshop_staging/euphrates-5.8.2-stable-prism_central.tar'
     FILES_METAURL='http://10.42.194.11/workshop_staging/afs-3.5.0.json'
