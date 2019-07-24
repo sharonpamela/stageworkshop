@@ -15,7 +15,9 @@ WORKSHOPS=(\
 "Tech Summit 2019 (AOS 5.10+/AHV PC 5.10+) = Current" \
 "Calm Workshop (AOS 5.8.x/AHV PC 5.8.x) = Stable" \
 "Development Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
-#"Citrix Desktop on AHV Workshop (AOS 5.11+/AHV PC 5.11+) = Development" \
+#"Era Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
+#"Files Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
+#"Citrix Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
 ) # Adjust function stage_clusters, below, for file/script mappings as needed
 
 function stage_clusters() {
