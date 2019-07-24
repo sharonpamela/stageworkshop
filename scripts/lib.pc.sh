@@ -121,7 +121,7 @@ function lcm() {
 
               # Fill the uuid array with the correct values
               uuid_arr=($(jq '.group_results[].entity_results[].data[] | select (.name=="entity_uuid") | .values[0].values[0]' reply_json.json | sort -u | tr "\"" " " | tr -s " "))
-              
+
               # Grabbing the versions of the UUID and put them in a versions array
               for uuid in "${uuid_arr[@]}"
               do
@@ -170,7 +170,7 @@ function lcm() {
 
        # Run the generate plan task
        _task_id=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST $_json_data ${_url_lcm})
-       
+
        # Notify the log server that the LCM has created a plan
        log "LCM Inventory has created a plan"
 
@@ -214,10 +214,10 @@ function karbon_enable() {
   local _json_data_set_enable="{\"value\":\"{\\\".oid\\\":\\\"ClusterManager\\\",\\\".method\\\":\\\"enable_service_with_prechecks\\\",\\\".kwargs\\\":{\\\"service_list_json\\\":\\\"{\\\\\\\"service_list\\\\\\\":[\\\\\\\"KarbonUIService\\\\\\\",\\\\\\\"KarbonCoreService\\\\\\\"]}\\\"}}\"}"
   local _json_is_enable="{\"value\":\"{\\\".oid\\\":\\\"ClusterManager\\\",\\\".method\\\":\\\"is_service_enabled\\\",\\\".kwargs\\\":{\\\"service_name\\\":\\\"KarbonUIService\\\"}}\"} "
   local _httpURL="https://localhost:9440/PrismGateway/services/rest/v1/genesis"
-  
+
   # Start the enablement process
   _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL}| grep "[true, null]" | wc -l)
-  
+
   # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
   if [[ $_response -eq 1 ]]; then
     # Check if Karbon has been enabled
@@ -505,7 +505,8 @@ function seedPC() {
     unzip /home/nutanix/seedPC.zip
     pushd /home/nutanix/lab/
 
-    _setup=$(/home/nutanix/lab/setupEnv.sh ${PC_HOST} > /dev/null 2>&1)
+    #_setup=$(/home/nutanix/lab/setupEnv.sh ${PC_HOST} > /dev/null 2>&1)
+    _setup=$(/home/nutanix/lab/initialize_lab.sh ${PC_HOST} > /dev/null 2>&1)
     log "Running Setup Script|$_setup"
 
     popd
