@@ -130,12 +130,8 @@ case ${1} in
     pc_init \
     && pc_dns_add \
     && pc_ui \
-    && pc_auth
-
-    # If we run this in a none HPOC we must skip the SMTP config as we have no idea what the SMTP server will be
-    if [[ ! -z ${SMTP_SERVER_ADDRESS}  ]]; then
-      pc_smtp
-    fi
+    && pc_auth \
+    && pc_smtp
 
     ssp_auth \
     && calm_enable \

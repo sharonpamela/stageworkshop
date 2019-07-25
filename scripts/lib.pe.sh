@@ -556,32 +556,21 @@ function pe_auth() {
 # Routine set PE's initial configuration
 ###############################################################################################################################################################################
 function pe_init() {
-  if [[ -z ${SMTP_SERVER_ADDRESS} ]]; then
-    # We are not running in HPOC so email is not needed, unless set manually
-    args_required 'DATA_SERVICE_IP EMAIL \
-      STORAGE_DEFAULT STORAGE_POOL STORAGE_IMAGES \
-      SLEEP ATTEMPTS'
-  else
-    args_required 'DATA_SERVICE_IP EMAIL \
-      SMTP_SERVER_ADDRESS SMTP_SERVER_FROM SMTP_SERVER_PORT \
-      STORAGE_DEFAULT STORAGE_POOL STORAGE_IMAGES \
-      SLEEP ATTEMPTS'
-  fi
+  args_required 'DATA_SERVICE_IP EMAIL \
+    SMTP_SERVER_ADDRESS SMTP_SERVER_FROM SMTP_SERVER_PORT \
+    STORAGE_DEFAULT STORAGE_POOL STORAGE_IMAGES \
+    SLEEP ATTEMPTS'
 
   if [[ `ncli cluster get-params | grep 'External Data' | \
          awk -F: '{print $2}' | tr -d '[:space:]'` == "${DATA_SERVICE_IP}" ]]; then
     log "IDEMPOTENCY: Data Services IP set, skip."
   else
-    # If we are running in HPOC so email can be send and defined
-    if [[ ! -z ${SMTP_SERVER_ADDRESS} ]]; then
-      log "Configure SMTP"
-
-      ncli cluster set-smtp-server port=${SMTP_SERVER_PORT} \
+    log "Configure SMTP"
+    ncli cluster set-smtp-server port=${SMTP_SERVER_PORT} \
       from-email-address=${SMTP_SERVER_FROM} address=${SMTP_SERVER_ADDRESS}
-      ${HOME}/serviceability/bin/email-alerts --to_addresses="${EMAIL}" \
-       --subject="[pe_init:Config SMTP:alert test] $(ncli cluster get-params)" \
-       && ${HOME}/serviceability/bin/send-email
-    fi
+    ${HOME}/serviceability/bin/email-alerts --to_addresses="${EMAIL}" \
+      --subject="[pe_init:Config SMTP:alert test] $(ncli cluster get-params)" \
+      && ${HOME}/serviceability/bin/send-email
 
     log "Configure NTP"
     ncli cluster add-to-ntp-servers servers=${NTP_SERVERS}

@@ -111,11 +111,15 @@ case ${1} in
     && pc_dns_add \
     && pc_ui \
     && pc_auth \
+<<<<<<< HEAD
 
     # If we run this in a none HPOC we must skip the SMTP config as we have no idea what the SMTP server will be
     if [[ ! -z ${SMTP_SERVER_ADDRESS}  ]]; then
       pc_smtp
     fi
+=======
+    && pc_smtp
+>>>>>>> upstream/master
 
     ssp_auth \
     && calm_enable \

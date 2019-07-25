@@ -67,6 +67,10 @@ function stage_clusters() {
     _pe_launch='files.sh'
     _pc_launch=${_pe_launch}
   fi
+  if (( $(echo ${_workshop} | grep -i Files | wc ${WC_ARG}) > 0 )); then
+    _libraries+='lib.pe.sh'
+    _pe_launch='files.sh'
+  fi
   if (( $(echo ${_workshop} | grep -i Summit | wc ${WC_ARG}) > 0 )); then
     _libraries+='lib.pe.sh lib.pc.sh'
     _pe_launch='ts2019.sh'
