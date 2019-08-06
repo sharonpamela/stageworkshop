@@ -59,17 +59,18 @@ function stage_clusters() {
   fi
   if (( $(echo ${_workshop} | grep -i Citrix | wc ${WC_ARG}) > 0 )); then
     _libraries+='lib.pe.sh lib.pc.sh'
-    _pe_launch='citrix.sh'
+    _pe_launch='citrix_bootcamp.sh'
+    _pc_launch=${_pe_launch}
+  fi
+  if (( $(echo ${_workshop} | grep -i Era | wc ${WC_ARG}) > 0 )); then
+    _libraries+='lib.pe.sh'
+    _pe_launch='era_bootcamp.sh'
     _pc_launch=${_pe_launch}
   fi
   if (( $(echo ${_workshop} | grep -i Files | wc ${WC_ARG}) > 0 )); then
     _libraries+='lib.pe.sh'
-    _pe_launch='files.sh'
+    _pe_launch='files_bootcamp.sh'
     _pc_launch=${_pe_launch}
-  fi
-  if (( $(echo ${_workshop} | grep -i Files | wc ${WC_ARG}) > 0 )); then
-    _libraries+='lib.pe.sh'
-    _pe_launch='files.sh'
   fi
   if (( $(echo ${_workshop} | grep -i Summit | wc ${WC_ARG}) > 0 )); then
     _libraries+='lib.pe.sh lib.pc.sh'
