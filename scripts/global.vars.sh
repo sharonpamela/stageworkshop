@@ -76,7 +76,7 @@ SMTP_SERVER_FROM='NutanixHostedPOC@nutanix.com'
 SMTP_SERVER_PORT=25
 
 AUTH_SERVER='AutoDC' # default; TODO:180 refactor AUTH_SERVER choice to input file
-AUTH_HOST="${IPV4_PREFIX}.$((${OCTET[3]} + 3))"
+AUTH_HOST="${IPV4_PREFIX}.$((${OCTET[3]} + 4))"
 LDAP_PORT=389
 AUTH_FQDN='ntnxlab.local'
 AUTH_DOMAIN='NTNXLAB'
