@@ -272,6 +272,42 @@ function karbon_image_download() {
 }
 
 ###############################################################################################################################################################################
+# Routine to enable Objects
+###############################################################################################################################################################################
+
+function objects_enable() {
+  local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
+  local _loop=0
+  local _json_data_set_enable="{\"value\":\"{\\\".oid\\\":\\\"ClusterManager\\\",\\\".method\\\":\\\"enable_service_with_prechecks\\\",\\\".kwargs\\\":{\\\"service_list_json\\\":\\\"{\\\\\\\"service_list\\\\\\\":[\\\\\\\"ossService\\\\\\\"]}\\\"}}\"}"
+  local _json_is_enable="{\"value\":\"{\\\".oid\\\":\\\"ClusterManager\\\",\\\".method\\\":\\\"is_service_enabled\\\",\\\".kwargs\\\":{\\\"service_name\\\":\\\"ossService\\\"}}\"} "
+  local _httpURL="https://localhost:9440/PrismGateway/services/rest/v1/genesis"
+
+  # Start the enablement process
+  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL}| grep "[true, null]" | wc -l)
+
+  # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
+  if [[ $_response -eq 1 ]]; then
+    # Check if Karbon has been enabled
+    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "[true, null]" | wc -l)
+    while [ $_response -ne 1 ]; do
+        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "[true, null]" | wc -l)
+    done
+    log "Objects has been enabled."
+  else
+    log "Retrying to enable Objects one more time."
+    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL}| grep "[true, null]" | wc -l)
+    if [[ $_response -eq 1 ]]; then
+      _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "[true, null]" | wc -l)
+      if [ $_response -lt 1 ]; then
+        log "Objects isn't enabled. Please use the UI to enable it."
+      else
+        log "Objects has been enabled."
+      fi
+    fi
+  fi
+}
+
+###############################################################################################################################################################################
 # Routine for PC_Admin
 ###############################################################################################################################################################################
 
