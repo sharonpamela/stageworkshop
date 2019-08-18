@@ -317,11 +317,11 @@ function objects_enable() {
   local _httpURL="https://localhost:9440/api/nutanix/v3/services/oss"
 
   # Start the enablement process
-  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL}| grep "[true, null]" | wc -l)
+  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL})
 
-  # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
-  if [[ $_response -eq 1 ]]; then
-    # Check if Karbon has been enabled
+  # The response should be a Task UUID
+  if [[ $_response -z ]]; then
+    # Check if OSS has been enabled
     _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "[true, null]" | wc -l)
     while [ $_response -ne 1 ]; do
         _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "[true, null]" | wc -l)
