@@ -11,6 +11,41 @@
 # Added the download bits for the Centos Image for Karbon
 ###############################################################################################################################################################################
 
+###############################################################################################################################################################################
+# Routine to deploy Era
+###############################################################################################################################################################################
+
+function era_deploy() {
+  local _attempts=30
+  local _loops=0
+  local _sleep=60
+  local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
+  local _url_flow='https://localhost:9440/api/nutanix/v3/services/microseg'
+
+  # Create the JSON payload
+  _json_data='{"state":"ENABLE"}'
+
+  log "Enable Nutanix Flow..."
+
+  # Enabling Flow and put the task id in a variable
+  _task_id=$(curl -X POST -d $_json_data $CURL_HTTP_OPTS --user ${PRISM_ADMIN}:${PE_PASSWORD} $_url_flow | jq '.task_uuid' | tr -d \")
+
+  # Try one more time then fail, but continue
+  if [ -z $_task_id ]; then
+    log "Flow not yet enabled. Will retry...."
+    _task_id=$(curl -X POST $_json_data $CURL_HTTP_OPTS --user ${PRISM_ADMIN}:${PE_PASSWORD} $_url_flow)
+
+    if [ -z $_task_id ]; then
+      log "Flow still not enabled.... ***Not retrying. Please enable via UI.***"
+    fi
+  else
+    log "Flow has been Enabled..."
+  fi
+
+
+
+}
+
 
 ###############################################################################################################################################################################
 # Routine to enable Flow
