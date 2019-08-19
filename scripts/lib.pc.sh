@@ -320,7 +320,7 @@ function objects_enable() {
   _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL})
 
   # The response should be a Task UUID
-  if [[ $_response -z ]]; then
+  if [[ -z $_response ]]; then
     # Check if OSS has been enabled
     _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "[true, null]" | wc -l)
     while [ $_response -ne 1 ]; do
