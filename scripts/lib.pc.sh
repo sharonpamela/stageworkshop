@@ -312,32 +312,32 @@ function karbon_image_download() {
 
 function objects_enable() {
   local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
-  local _loop=0
+  local _loops=0
   local _json_data_set_enable="{\"state\":\"ENABLE\"}"
+  local _json_data_check="{\"entity_type\":\"objectstore\"}"
+  local _httpURL_check="https://localhost:9440/oss/api/nutanix/v3/groups"
   local _httpURL="https://localhost:9440/api/nutanix/v3/services/oss"
 
   # Start the enablement process
   _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL})
 
   # The response should be a Task UUID
-  if [[ -z $_response ]]; then
+  if [[ ! -z $_response ]]; then
     # Check if OSS has been enabled
-    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL}| grep "task_uuid" | wc -l)
+    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_check ${_httpURL_check}| grep "objectstore" | wc -l)
     while [ $_response -ne 1 ]; do
-        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "task_uuid" | wc -l)
+        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_check ${_httpURL_check}| grep "objectstore" | wc -l)
+        if [[ $loops -ne 30 ]]; then
+          sleep 10
+          (( _loops++ ))
+        else
+          log "Objects isn't enabled. Please use the UI to enable it."
+          break
+        fi
     done
     log "Objects has been enabled."
   else
-    log "Retrying to enable Objects one more time."
-    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL}| grep "task_uuid" | wc -l)
-    if [[ $_response -eq 1 ]]; then
-      _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_is_enable ${_httpURL}| grep "task_uuid" | wc -l)
-      if [ $_response -lt 1 ]; then
-        log "Objects isn't enabled. Please use the UI to enable it."
-      else
-        log "Objects has been enabled."
-      fi
-    fi
+    log "Objects isn't enabled. Please use the UI to enable it."
   fi
 }
 
