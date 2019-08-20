@@ -98,17 +98,23 @@ curl -X POST \
 
 
 #######################################################################################################
+# Upload Nutanix Files files
+#######################################################################################################
+
+
+
+#######################################################################################################
 # Deploy an Objectstore
 #######################################################################################################
 curl 'https://10.42.87.39:9440/oss/api/nutanix/v3/objectstores' --data-binary '{"api_version":"3.0","metadata":{"kind":"objectstore"},"spec":{"name":"TEST","description":"TEST","resources":{"domain":"test.local","cluster_reference":{"kind":"cluster","uuid":"0005906e-20db-d253-2dc2-002590ad0daa"},"buckets_infra_network_dns":"10.42.87.42","buckets_infra_network_vip":"10.42.87.43","buckets_infra_network_reference":{"kind":"subnet","uuid":"850e3978-2a93-4c7d-a72f-7b83972af1cf"},"client_access_network_reference":{"kind":"subnet","uuid":"9c9c6cf7-35ce-4453-8d72-ac23e691c625"},"aggregate_resources":{"total_vcpu_count":30,"total_memory_size_mib":98304,"total_capacity_gib":51200},"client_access_network_ipv4_range":{"ipv4_start":"10.42.87.129","ipv4_end":"10.42.87.132"}}}}' --compressed --insecure
 
+In need of a different amount of UUIDs before this api will work:
+1. Subnet for the client_access_network; maybe the secondary network? Where is the Windows VM running?
+2. Subnet for the infrastructure; the containers need to be able to talk to the CVMs
+3. Cluster UUID
+These UUIDs need to be found dynamically as they differ PER installation/cluster
 
 #######################################################################################################
 # Progress creation of an object store
 #######################################################################################################
 curl 'https://10.42.87.39:9440/oss/api/nutanix/v3/groups' --data-binary '{"entity_type":"objectstore","group_member_sort_attribute":"name","group_member_sort_order":"ASCENDING","group_member_count":20,"group_member_offset":0,"group_member_attributes":[{"attribute":"name"},{"attribute":"domain"},{"attribute":"num_msp_workers"},{"attribute":"usage_bytes"},{"attribute":"num_buckets"},{"attribute":"num_objects"},{"attribute":"num_alerts_internal"},{"attribute":"client_access_network_ip_used_list"},{"attribute":"total_capacity_gib"},{"attribute":"last_completed_step"},{"attribute":"state"},{"attribute":"percentage_complete"},{"attribute":"ipv4_address"},{"attribute":"num_alerts_critical"},{"attribute":"num_alerts_info"},{"attribute":"num_alerts_warning"},{"attribute":"error_message_list"},{"attribute":"cluster_name"},{"attribute":"client_access_network_name"},{"attribute":"client_access_network_ip_list"},{"attribute":"buckets_infra_network_name"},{"attribute":"buckets_infra_network_vip"},{"attribute":"buckets_infra_network_dns"}]}' --compressed --insecure
-
-
-#######################################################################################################
-# Upload Nutanix Files files
-#######################################################################################################
