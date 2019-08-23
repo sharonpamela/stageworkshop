@@ -56,6 +56,7 @@ OCTET=(${PE_HOST//./ }) # zero index
 IPV4_PREFIX=${OCTET[0]}.${OCTET[1]}.${OCTET[2]}
 DATA_SERVICE_IP=${IPV4_PREFIX}.$((${OCTET[3]} + 1))
 PC_HOST=${IPV4_PREFIX}.$((${OCTET[3]} + 2))
+VLAN=${OCTET[3]}
 DNS_SERVERS='8.8.8.8'
 NTP_SERVERS='0.us.pool.ntp.org,1.us.pool.ntp.org,2.us.pool.ntp.org,3.us.pool.ntp.org'
 
