@@ -116,8 +116,8 @@ case ${1} in
     ssp_auth \
     && calm_enable \
     && karbon_enable \
-    && objects_enable \
     && lcm \
+    && objects_enable \
     && karbon_image_download \
     && images \
     && seedPC \
