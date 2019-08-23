@@ -320,7 +320,8 @@ function objects_enable() {
 
   # Start the enablement process
   _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL})
-
+  log "Enabling Objects....."
+  
   # The response should be a Task UUID
   if [[ ! -z $_response ]]; then
     # Check if OSS has been enabled
