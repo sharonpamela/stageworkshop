@@ -11,13 +11,14 @@ begin
 # - Calm || Bootcamp || Citrix || Summit
 # - PC #.#
 WORKSHOPS=(\
-"Bootcamp (AOS 5.10+/AHV PC 5.10+) = Current" \
-"Tech Summit 2019 (AOS 5.10+/AHV PC 5.10+) = Current" \
-"Calm Workshop (AOS 5.8.x/AHV PC 5.8.x) = Stable" \
-"Development Bootcamp (AOS 5.10+/AHV PC 5.11+) = Development" \
+"Bootcamp (AOS 5.10+/AHV PC 5.11+) = Current" \
+"Previous Bootcamp (AOS 5.10+/AHV PC 5.10+) = Stable" \
+"Development Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
+"Tech Summit 2019 (AOS 5.10+/AHV PC 5.10+) = Stable" \
 #"Era Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
 #"Files Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
 #"Citrix Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
+#"Calm Workshop (AOS 5.8.x/AHV PC 5.8.x) = Stable" \
 ) # Adjust function stage_clusters, below, for file/script mappings as needed
 
 function stage_clusters() {
