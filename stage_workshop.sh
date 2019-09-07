@@ -11,9 +11,9 @@ begin
 # - Calm || Bootcamp || Citrix || Summit
 # - PC #.#
 WORKSHOPS=(\
-"Bootcamp (AOS 5.10+/AHV PC 5.11+) = Current" \
-"Previous Bootcamp (AOS 5.10+/AHV PC 5.10+) = Stable" \
-"Development Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
+"Bootcamp Staging (AOS 5.10+/AHV PC 5.11+) = Current" \
+"Previous Bootcamp Staging (AOS 5.10+/AHV PC 5.10+) = Stable" \
+"In Development Bootcamp Staging (AOS 5.11+/AHV PC 5.11+) = Development" \
 "Tech Summit 2019 (AOS 5.10+/AHV PC 5.10+) = Stable" \
 #"Era Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
 #"Files Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
