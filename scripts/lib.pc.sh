@@ -321,7 +321,7 @@ function objects_enable() {
   # Start the enablement process
   _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d $_json_data_set_enable ${_httpURL})
   log "Enabling Objects....."
-  
+
   # The response should be a Task UUID
   if [[ ! -z $_response ]]; then
     # Check if OSS has been enabled
@@ -341,6 +341,45 @@ function objects_enable() {
     log "Objects isn't enabled. Please use the UI to enable it."
   fi
 }
+
+###############################################################################################################################################################################
+# Create an object store called ntnx_object.ntnxlab.local
+###############################################################################################################################################################################
+
+function object_store() {
+    local _attempts=30
+    local _loops=0
+    local _sleep=60
+    local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
+    local _url_network='https://localhost:9440/api/nutanix/v3/subnets/list'
+    local _url_oss='https://localhost:9440/oss/api/nutanix/v3/objectstores'
+
+    # Payload for the _json_data
+    _json_data='{"kind":"subnet"}'
+
+    # Get the json data and split into CLUSTER_UUID and Primary_Network_UUID
+    CLUSTER_UUID=$(curl -X POST -d $_json_data $CURL_HTTP_OPTS --user ${PRISM_ADMIN}:${PE_PASSWORD} $_url_network | jq '.entities[].spec | select (.name=="Primary") | .cluster_reference.uuid' | tr -d \")
+    echo ${CLUSTER_UUID}
+
+    PRIM_NETWORK_UUID=$(curl -X POST -d $_json_data $CURL_HTTP_OPTS --user ${PRISM_ADMIN}:${PE_PASSWORD} $_url_network | jq '.entities[] | select (.spec.name=="Primary") | .metadata.uuid' | tr -d \")
+    echo ${PRIM_NETWORK_UUID}
+
+    _json_data_oss='{"api_version":"3.0","metadata":{"kind":"objectstore"},"spec":{"name":"ntnx_objects","description":"NTNXLAB","resources":{"domain":"ntnxlab.local","cluster_reference":{"kind":"cluster","uuid":"'
+    _json_data_oss+=${CLUSTER_UUID}
+    _json_data_oss+='"},"buckets_infra_network_dns":"NETWORKX.VLANX.16","buckets_infra_network_vip":"NETWORKX.VLANX.17","buckets_infra_network_reference":{"kind":"subnet","uuid":"'
+    _json_data_oss+=${PRIM_NETWORK_UUID}
+    _json_data_oss+='"},"client_access_network_reference":{"kind":"subnet","uuid":"'
+    _json_data_oss+=${PRIM_NETWORK_UUID}
+    _json_data_oss+='"},"aggregate_resources":{"total_vcpu_count":10,"total_memory_size_mib":32768,"total_capacity_gib":51200},"client_access_network_ipv4_range":{"ipv4_start":"NETWORKX.VLANX.18","ipv4_end":"NETWORKX.VLANX.21"}}}}'
+
+    # Set the right VLAN dynamically so we are configuring in the right network
+    _json_data_oss=${_json_data_oss//VLANX/${VLAN}}
+    _json_data_oss=${_json_data_oss//NETWORKX/${NETWORK}}
+
+    curl -X POST -d $_json_data_oss $CURL_HTTP_OPTS --user ${PRISM_ADMIN}:${PE_PASSWORD} $_url_oss
+
+}
+
 
 ###############################################################################################################################################################################
 # Routine for PC_Admin
@@ -562,6 +601,9 @@ function pc_passwd() {
   #     https://localhost:9440/PrismGateway/services/rest/v1/utils/change_default_system_password)
   # log "cURL reset password _test=${_test}"
 }
+
+
+
 
 ###############################################################################################################################################################################
 # Seed PC data for Prism Pro Labs

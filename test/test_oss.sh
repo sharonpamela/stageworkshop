@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# Run the needed variabkles
-./global.vars.sh
+# Run the needed variables
+. global.vars.sh
 
 # Test script to get the objects store creation
-# Get the UUIDs of: 
+# Get the UUIDs of:
 # - UUID of the cluster
 # - UUID of the network we need to have to get the command running. As we need to have them run in the primary network, we can use that UUID in the command
 
@@ -15,8 +15,6 @@ function object_store() {
     local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
     local _url_network='https://localhost:9440/api/nutanix/v3/subnets/list'
     local _url_oss='https://localhost:9440/oss/api/nutanix/v3/objectstores'
-    local PRISM_ADMIN='admin'
-    local PE_PASSWORD='techX2019!'
 
     # Payload for the _json_data
     _json_data='{"kind":"subnet"}'
@@ -34,14 +32,13 @@ function object_store() {
     _json_data_oss+=${PRIM_NETWORK_UUID}
     _json_data_oss+='"},"client_access_network_reference":{"kind":"subnet","uuid":"'
     _json_data_oss+=${PRIM_NETWORK_UUID}
-    _json_data_oss+='"},"aggregate_resources":{"total_vcpu_count":10,"total_memory_size_mib":98304,"total_capacity_gib":51200},"client_access_network_ipv4_range":{"ipv4_start":"10.42.VLANX.18","ipv4_end":"10.42.VLANX.21"}}}}'
+    _json_data_oss+='"},"aggregate_resources":{"total_vcpu_count":10,"total_memory_size_mib":32768,"total_capacity_gib":51200},"client_access_network_ipv4_range":{"ipv4_start":"10.42.VLANX.18","ipv4_end":"10.42.VLANX.21"}}}}'
 
     # Set the right VLAN dynamically so we are configuring in the right network
-    sed "s/VLANX/$VLAN/g"
+    _json_data_oss=${_json_data_oss//VLANX/${VLAN}}
 
-    echo "curl -X POST -d $_json_data_oss $CURL_HTTP_OPTS --user ${PRISM_ADMIN}:${PE_PASSWORD} $_url_oss"
+    curl -X POST -d $_json_data_oss $CURL_HTTP_OPTS --user ${PRISM_ADMIN}:${PE_PASSWORD} $_url_oss
 
 }
 
 object_store
-

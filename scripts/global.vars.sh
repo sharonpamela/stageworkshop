@@ -58,9 +58,10 @@ OCTET=(${PE_HOST//./ }) # zero index
 IPV4_PREFIX=${OCTET[0]}.${OCTET[1]}.${OCTET[2]}
 DATA_SERVICE_IP=${IPV4_PREFIX}.$((${OCTET[3]} + 1))
 PC_HOST=${IPV4_PREFIX}.$((${OCTET[3]} + 2))
-VLAN=${OCTET[3]}
 DNS_SERVERS='8.8.8.8'
 NTP_SERVERS='0.us.pool.ntp.org,1.us.pool.ntp.org,2.us.pool.ntp.org,3.us.pool.ntp.org'
+
+
 
 NW1_NAME='Primary'
 NW1_VLAN=0
@@ -73,6 +74,10 @@ NW2_VLAN=$((OCTET[2]*10+1))
 NW2_SUBNET="${IPV4_PREFIX}.129/25"
 NW2_DHCP_START="${IPV4_PREFIX}.132"
 NW2_DHCP_END="${IPV4_PREFIX}.253"
+
+# Stuff needed for object_store
+VLAN=${OCTET[2]}
+NETWORK="${OCTET[0]}.${OCTET[1]}"
 
 SMTP_SERVER_ADDRESS='mxb-002c1b01.gslb.pphosted.com'
 SMTP_SERVER_FROM='NutanixHostedPOC@nutanix.com'
