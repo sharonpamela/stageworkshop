@@ -364,7 +364,7 @@ function object_store() {
     PRIM_NETWORK_UUID=$(curl -X POST -d $_json_data $CURL_HTTP_OPTS --user ${PRISM_ADMIN}:${PE_PASSWORD} $_url_network | jq '.entities[] | select (.spec.name=="Primary") | .metadata.uuid' | tr -d \")
     echo ${PRIM_NETWORK_UUID}
 
-    _json_data_oss='{"api_version":"3.0","metadata":{"kind":"objectstore"},"spec":{"name":"ntnx_objects","description":"NTNXLAB","resources":{"domain":"ntnxlab.local","cluster_reference":{"kind":"cluster","uuid":"'
+    _json_data_oss='{"api_version":"3.0","metadata":{"kind":"objectstore"},"spec":{"name":"ntnx-objects","description":"NTNXLAB","resources":{"domain":"ntnxlab.local","cluster_reference":{"kind":"cluster","uuid":"'
     _json_data_oss+=${CLUSTER_UUID}
     _json_data_oss+='"},"buckets_infra_network_dns":"NETWORKX.VLANX.16","buckets_infra_network_vip":"NETWORKX.VLANX.17","buckets_infra_network_reference":{"kind":"subnet","uuid":"'
     _json_data_oss+=${PRIM_NETWORK_UUID}
