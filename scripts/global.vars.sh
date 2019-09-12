@@ -50,7 +50,6 @@ ISO_IMAGES=(\
    SQLServer2014SP3.iso \
    XenApp_and_XenDesktop_7_18.iso \
    VeeamBR_9.5.4.2615.Update4.iso \
-   move3.2.0.qcow2 \
 )
 
 # shellcheck disable=2206
