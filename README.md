@@ -2,20 +2,27 @@ This script supports staging HPoC clusters for [Nutanix Workshops](https://nutan
 It automates the majority of the [Workshop Setup Guide](http://www.nutanixworkshops.com/en/latest/setup/).
 After HPoC Foundation, you can have push-button Calm in about half an hour!
 
+---
+
 # Table of Contents #
+<!-- MDTOC maxdepth:6 firsth1:0 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
 
-1. [Available Workshops](#available-workshops)
-2. [HPoC Cluster Reservation](#hpoc-cluster-reservation)
-3. [Staging Your HPoC](#staging-your-hpoc)
-    1. [Interactive Usage](#interactive-usage)
-    2. [Non-interactive Usage](#non-interactive-usage)
-4. [Validate Staged Clusters](#validate-staged-clusters)
-5. [Authentication](#authentication)
+- [Available Workshops](#available-workshops)   
+- [HPoC Cluster Reservation](#hpoc-cluster-reservation)   
+- [Staging Your HPoC](#staging-your-hpoc)   
+   - [Interactive Usage](#interactive-usage)   
+   - [Non-interactive Usage](#non-interactive-usage)   
+   - [Validate Staged Clusters](#validate-staged-clusters)   
+- [Authentication](#authentication)   
 
+<!-- /MDTOC -->
+---
 ## Available Workshops ##
 
 1. Calm Introduction Workshop (AOS/AHV 5.5+)
 2. Citrix Desktop on AHV Workshop (AOS/AHV 5.6)
+
+See the WORKSHOPS list at the top of [stage_workshop.sh](blob/master/stage_workshop.sh#L8).
 
 ## HPoC Cluster Reservation ##
 
@@ -24,7 +31,7 @@ Make your new reservation on https://rx.corp.nutanix.com/ with:
 - __AOS + Hypervisor:__ proper versions for your workshop, specified above
   - Recommended: AOS and AHV 5.8
   - Older or newer versions may not function as expected
-- __OS Images:__ *you do not* need to specify images (CentOS, Windows2012, etc.) for your reservation
+- __VM Images:__ *you do not* need to specify images (CentOS, Windows2012, etc.) for your reservation
 
 ## Staging Your HPoC ##
 
@@ -59,15 +66,13 @@ Finally, execute the script to stage the HPOC clusters defined in your text file
 
 ### Interactive Usage ###
 
-````./stage_workshop.sh````
+`./stage_workshop.sh`
 
-Running the script interactively
- will prompt you to input the name of your text file containing your cluster IP and password details.
- You will then be prompted to choose a Workshop to stage.
+Running the script interactively will prompt you to input the name of your text file containing your cluster IP and password details. You will then be prompted to choose a Workshop to stage.
 
 ### Non-interactive Usage ###
 
-````./stage_workshop.sh -f [example_pocs.txt] -w [workshop number]````
+`./stage_workshop.sh -f [example_pocs.txt] -w [workshop number]`
 
 Each staging option will deploy:
 
@@ -76,28 +81,26 @@ Each staging option will deploy:
 - Prism Central
 - configuring AHV networks for your Primary and Secondary VLANs.
 
-Ask questions not covered here in Slack to the Global Sales Technical Enablement team, first see the pinned items in each channel:
+Ask questions not covered here to the Global Sales Technical Enablement team via Slack, review the pinned items in each channel first:
 - __#technology-bootcamps:__ for customer and prospect bootcamps
 - __#hands-on-workshops:__ for Nutanix Partner and SE workshops
 
-## Validate Staged Clusters ##
+### Validate Staged Clusters ###
 
 After staging (~30m), you can re-run the stage_workshop script and select "Validate Staged Clusters" to perform a quick check to ensure all images were uploaded and that Prism Central was provisioned as expected.
 
 Example:
 
-````
-./stage_workshop.sh
-Cluster Input File: example_pocs.txt
-1) Calm Introduction Workshop (AOS/AHV 5.6)
-2) Citrix Desktop on AHV Workshop (AOS/AHV 5.6)
-3) Change Cluster Input File
-4) Validate Staged Clusters
-5) Quit
-Select an option: 4
-10.21.44.37 - Prism Central staging FAILED
-10.21.44.37 - Review logs at 10.21.44.37:/home/nutanix/config.log and 10.21.44.39:/home/nutanix/pcconfig.log
-````
+    ./stage_workshop.sh
+    Cluster Input File: example_pocs.txt
+    1) Calm Introduction Workshop (AOS/AHV 5.6)
+    2) Citrix Desktop on AHV Workshop (AOS/AHV 5.6)
+    3) Change Cluster Input File
+    4) Validate Staged Clusters
+    5) Quit
+    Select an option: 4
+    10.21.44.37 - Prism Central staging FAILED
+    10.21.44.37 - Review logs at 10.21.44.37:/home/nutanix/config.log and 10.21.44.39:/home/nutanix/pcconfig.log
 
 ## Authentication ##
 

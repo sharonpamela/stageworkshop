@@ -2,23 +2,15 @@
 # use bash -x to debug command substitution and evaluation instead of echo.
 DEBUG=
 
-# Source Workshop common routines + global variables
-. scripts/lib.common.sh
-. scripts/global.vars.sh
-begin
-
 # For WORKSHOPS keyword mappings to scripts and variables, please use:
-# - Calm || Bootcamp || Citrix || Summit
+# - Calm || Citrix || Summit
 # - PC #.#
 WORKSHOPS=(\
-"Bootcamp Staging (AOS 5.10+/AHV PC 5.11+) = Current" \
-"Previous Bootcamp Staging (AOS 5.10+/AHV PC 5.10+) = Stable" \
-"In Development Bootcamp Staging (AOS 5.11+/AHV PC 5.11+) = Development" \
-"Tech Summit 2019 (AOS 5.10+/AHV PC 5.10+) = Stable" \
-#"Era Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
-#"Files Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
-#"Citrix Bootcamp (AOS 5.11+/AHV PC 5.11+) = Development" \
-#"Calm Workshop (AOS 5.8.x/AHV PC 5.8.x) = Stable" \
+"Calm Workshop (AOS 5.5+/AHV PC 5.8.x) = Stable (AutoDC1)" \
+"Calm Workshop (AOS 5.8.x/AHV PC 5.10.x) = Stable (AutoDC2)" \
+"Calm Workshop (AOS 5.9+/AHV PC 5.10.x) = Development" \
+"Tech Summit 2019 (AOS 5.10+/AHV PC 5.10+) = Development" \
+"Citrix Desktop on AHV Workshop (AOS/AHV 5.6)" \
 ) # Adjust function stage_clusters, below, for file/script mappings as needed
 
 function stage_clusters() {
@@ -27,55 +19,42 @@ function stage_clusters() {
   local    _container
   local _dependency
   local       _fields
-  local    _libraries='global.vars.sh lib.common.sh '
+  local    _libraries='global.vars.sh we-lib.common.sh '
   local    _pe_launch # will be transferred and executed on PE
   local    _pc_launch # will be transferred and executed on PC
   local       _sshkey=${SSH_PUBKEY}
-  #local       _wc_arg='--lines'
-  local     _wc_arg=${WC_ARG}
+  local       _wc_arg='--lines'
   local     _workshop=${WORKSHOPS[$((${WORKSHOP_NUM}-1))]}
 
   # Map to latest and greatest of each point release
   # Metadata URLs MUST be specified in lib.common.sh function: ntnx_download
   # TODO: make WORKSHOPS and map a JSON configuration file?
-  if (( $(echo ${_workshop} | grep -i "PC 5.11" | wc ${WC_ARG}) > 0 )); then
+  if (( $(echo ${_workshop} | grep -i "PC 5.10" | wc ${WC_ARG}) > 0 )); then
     export PC_VERSION="${PC_DEV_VERSION}"
-  elif (( $(echo ${_workshop} | grep -i "PC 5.10" | wc ${WC_ARG}) > 0 )); then
-    export PC_VERSION="${PC_CURRENT_VERSION}"
   elif (( $(echo ${_workshop} | grep -i "PC 5.8" | wc ${WC_ARG}) > 0 )); then
     export PC_VERSION="${PC_STABLE_VERSION}"
+  elif (( $(echo ${_workshop} | grep -i "PC 5.9" | wc ${WC_ARG}) > 0 )); then
+    export PC_VERSION=5.9.2
+  elif (( $(echo ${_workshop} | grep -i "PC 5.7" | wc ${WC_ARG}) > 0 )); then
+    export PC_VERSION=5.7.1.1
+  elif (( $(echo ${_workshop} | grep -i "PC 5.6" | wc ${WC_ARG}) > 0 )); then
+    export PC_VERSION=5.6.2
   fi
 
   # Map workshop to staging script(s) and libraries,
   # _pe_launch will be executed on PE
-  if (( $(echo ${_workshop} | grep -i Bootcamp | wc ${WC_ARG}) > 0 )); then
-    _libraries+='lib.pe.sh lib.pc.sh'
-    _pe_launch='bootcamp.sh'
-    _pc_launch=${_pe_launch}
-  fi
   if (( $(echo ${_workshop} | grep -i Calm | wc ${WC_ARG}) > 0 )); then
     _libraries+='lib.pe.sh lib.pc.sh'
     _pe_launch='calm.sh'
     _pc_launch=${_pe_launch}
   fi
   if (( $(echo ${_workshop} | grep -i Citrix | wc ${WC_ARG}) > 0 )); then
-    _libraries+='lib.pe.sh lib.pc.sh'
-    _pe_launch='citrix_bootcamp.sh'
-    _pc_launch=${_pe_launch}
-  fi
-  if (( $(echo ${_workshop} | grep -i Era | wc ${WC_ARG}) > 0 )); then
-    _libraries+='lib.pe.sh'
-    _pe_launch='era_bootcamp.sh'
-    _pc_launch=${_pe_launch}
-  fi
-  if (( $(echo ${_workshop} | grep -i Files | wc ${WC_ARG}) > 0 )); then
-    _libraries+='lib.pe.sh'
-    _pe_launch='files_bootcamp.sh'
-    _pc_launch=${_pe_launch}
+    _pe_launch='stage_citrixhow.sh'
+    _pc_launch='stage_citrixhow_pc.sh'
   fi
   if (( $(echo ${_workshop} | grep -i Summit | wc ${WC_ARG}) > 0 )); then
     _libraries+='lib.pe.sh lib.pc.sh'
-    _pe_launch='ts2019.sh'
+    _pe_launch='we-ts2019.sh'
     _pc_launch=${_pe_launch}
   fi
 
@@ -165,8 +144,8 @@ EoM
       fi
 
       log "Remote execution configuration script ${_pe_launch} on PE@${PE_HOST}"
-      ## TODO: If DEBUG is set, we run the below command with bash -x
-      remote_exec 'SSH' 'PE' "${PE_CONFIGURATION} nohup bash /home/nutanix/${_pe_launch} 'PE' >> ${_pe_launch%%.sh}.log 2>&1 &"
+      # Changed the nohup to bash -x so all commands are also saved. For debugging purpose
+      remote_exec 'SSH' 'PE' "${PE_CONFIGURATION} nohup bash -x /home/nutanix/${_pe_launch} 'PE' >> ${_pe_launch%%.sh}.log 2>&1 &"
       unset PE_CONFIGURATION
 
       # shellcheck disable=SC2153
@@ -319,6 +298,11 @@ function select_workshop() {
 }
 
 #__main__
+
+# Source Workshop common routines + global variables
+. scripts/we-lib.common.sh
+. scripts/global.vars.sh
+begin
 
     _VALIDATE='Validate Staged Clusters'
 _CLUSTER_FILE='Cluster Input File'

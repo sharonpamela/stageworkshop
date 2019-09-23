@@ -4,9 +4,11 @@
 .kitchen.local.yml
 *.log
 cache*/
-autodc/autodc.*
 example_pocs.txt
 Gemfile.lock
 logs/
 master.zip
+original.release.json
 stageworkshop-master/
+venv/
+.idea/

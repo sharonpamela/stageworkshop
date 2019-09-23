@@ -2,6 +2,9 @@
 # -x
 # Dependencies: acli, ncli, jq, sshpass, curl, md5sum, pgrep, wc, tr, pkill
 
+###############################################################################################################################################################################
+# Routine to set the acli command
+###############################################################################################################################################################################
 function acli() {
   local _cmd
 
@@ -10,6 +13,9 @@ function acli() {
   # DEBUG=1 && if [[ ${DEBUG} ]]; then log "$@"; fi
 }
 
+###############################################################################################################################################################################
+# Routine to install the AutoDC and join the Domain
+###############################################################################################################################################################################
 function authentication_source() {
   local   _attempts
   local      _error=13
@@ -42,8 +48,10 @@ function authentication_source() {
       local  _autodc_status="systemctl show ${_autodc_service} --property=SubState"
       local _autodc_success='SubState=running'
 
-      if (( ${_pc_version[0]} >= 5 && ${_pc_version[1]} >= 9 )); then
-        log "PC_VERSION ${PC_VERSION} >= 5.9, setting AutoDC-2.0..."
+      #if (( ${_pc_version[0]} >= 5 && ${_pc_version[1]} >= 9 )); then
+      if (( ${_pc_version[0]} >= 5 && ${_pc_version[1]} >= 8 )); then
+        log "PC_VERSION ${PC_VERSION} >= 5.9, setting AutoDC2..."
+
            _autodc_auth=" --username=${AUTH_ADMIN_USER} --password=${AUTH_ADMIN_PASS}"
           _autodc_index=''
         _autodc_release=2
@@ -51,14 +59,6 @@ function authentication_source() {
         _autodc_restart="sleep 2 && service ${_autodc_service} stop && sleep 5 && service ${_autodc_service} start"
          _autodc_status="service ${_autodc_service} status"
         _autodc_success=' * status: started'
-
-        # REVIEW: override global.vars
-        export AUTODC_REPOS=(\
-         'http://10.132.128.50:81/share/saved-images/autodc-2.0.qcow2' \
-         'nfs://pocfs.nutanixdc.local/images/CorpSE_Calm/autodc-2.0.qcow2' \
-        # 'smb://pocfs.nutanixdc.local/images/CorpSE_Calm/autodc-2.0.qcow2' \
-         'http://10.59.103.143:8000/autodc-2.0.qcow2' \
-        )
       fi
 
       dns_check "dc${_autodc_index}.${AUTH_FQDN}"
@@ -75,7 +75,7 @@ function authentication_source() {
 
         repo_source AUTODC_REPOS[@]
 
-        if (( `source /etc/profile.d/nutanix_env.sh && acli image.list | grep ${AUTH_SERVER}${_autodc_release} | wc --lines` == 0 )); then
+        if (( $(source /etc/profile.d/nutanix_env.sh && acli image.list | grep ${AUTH_SERVER}${_autodc_release} | wc --lines) == 0 )); then
           log "Import ${AUTH_SERVER}${_autodc_release} image from ${SOURCE_URL}..."
           acli image.create ${AUTH_SERVER}${_autodc_release} \
             image_type=kDiskImage wait=true \
@@ -156,6 +156,10 @@ function authentication_source() {
   esac
 }
 
+###############################################################################################################################################################################
+# Routine to get the Nutanix Files injected
+###############################################################################################################################################################################
+
 function files_install() {
   local  _ncli_softwaretype='FILE_SERVER'
   local _ncli_software_type='afs'
@@ -172,19 +176,163 @@ function files_install() {
   if [[ ${_test} != "${FILES_VERSION}" ]]; then
     log "Files ${FILES_VERSION} not completed. ${_test}"
     ntnx_download "${_ncli_software_type}"
-
-    ncli software upload software-type=${_ncli_software_type} \
-      meta-file-path="$(pwd)/${NTNX_META_URL##*/}" \
-      file-path="$(pwd)/${NTNX_SOURCE_URL##*/}"
   else
     log "IDEMPOTENCY: Files ${FILES_VERSION} already completed."
   fi
 }
 
-function network_configure() {
+###############################################################################################################################################################################
+# Routine to get the Nutanix File Analytics injected
+###############################################################################################################################################################################
 
-  if [[ ! -z $(acli "net.list" | grep ${NW1_NAME}) ]]; then
-    log "IDEMPOTENCY: ${NW1_NAME} network set, skip."
+function file_analytics_install() {
+  local  _ncli_softwaretype='FILE_ANALYTICS'
+  local _ncli_software_type='file_analytics'
+  local               _test
+
+  dependencies 'install' 'jq' || exit 13
+
+  log "IDEMPOTENCY: checking for ${_ncli_software_type} completed..."
+  _test=$(source /etc/profile.d/nutanix_env.sh \
+    && ncli --json=true software list \
+    | jq -r \
+      '.data[] | select(.softwareType == "'${_ncli_softwaretype}'") | select(.status == "COMPLETED") | .version')
+
+  if [[ ${_test} != "${FILE_ANALYTICS_VERSION}" ]]; then
+    log "Files ${FILE_ANALYTICS_VERSION} not completed. ${_test}"
+    ntnx_download "${_ncli_software_type}"
+  else
+    log "IDEMPOTENCY: Files ${FILE_ANALYTICS_VERSION} already completed."
+  fi
+}
+
+###############################################################################################################################################################################
+# Create File Server
+###############################################################################################################################################################################
+
+function create_file_server() {
+  local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
+  local      _fileserver_name="BootcampFS"
+  local     _internal_nw_name="${1}"
+  local     _internal_nw_uuid
+  local     _external_nw_name="${2}"
+  local     _external_nw_uuid
+  local                 _test
+  local _httpURL="https://localhost:9440/PrismGateway/services/rest/v1/vfilers"
+
+  log "Get cluster network and storage container UUIDs..."
+  _internal_nw_uuid=$(acli "net.get ${_internal_nw_name}" \
+    | grep "uuid" | cut -f 2 -d ':' | xargs)
+  _external_nw_uuid=$(acli "net.get ${_external_nw_name}" \
+    | grep "uuid" | cut -f 2 -d ':' | xargs)
+  _storage_default_uuid=$(ncli container ls name=${STORAGE_DEFAULT} \
+    | grep Uuid | grep -v Pool | cut -f 2 -d ':' | xargs)
+  log "${_internal_nw_name} network UUID: ${_internal_nw_uuid}"
+  log "${_external_nw_name} network UUID: ${_external_nw_uuid}"
+  log "${STORAGE_DEFAULT} storage container UUID: ${_storage_default_uuid}"
+
+  HTTP_JSON_BODY=$(cat <<EOF
+-d {
+   "name":"${_fileserver_name}",
+   "numCalculatedNvms":"3",
+   "numVcpus":"4",
+   "memoryGiB":"12",
+   "internalNetwork":{
+      "subnetMask":"",
+      "defaultGateway":"",
+      "uuid":"${_internal_nw_uuid}",
+      "pool":[
+
+      ]
+   },
+   "externalNetworks":[
+      {
+         "subnetMask":"",
+         "defaultGateway":"",
+         "uuid":"${_external_nw_uuid}",
+         "pool":[
+
+         ]
+      }
+   ],
+   "windowsAdDomainName":"${AUTH_FQDN}",
+   "windowsAdUsername":"${AUTH_ADMIN_USER}",
+   "windowsAdPassword":"${AUTH_ADMIN_PASS}",
+   "dnsServerIpAddresses":[
+      "${AUTH_HOST}"
+   ],
+   "ntpServers":[
+      "${NTP_SERVERS}"
+   ],
+   "sizeGib":"1024",
+   "version":"${FILES_VERSION}",
+   "dnsDomainName":"${AUTH_FQDN}",
+   "nameServicesDTO":{
+      "adDetails":{
+         "windowsAdDomainName":"${AUTH_FQDN}",
+         "windowsAdUsername":"${AUTH_ADMIN_USER}",
+         "windowsAdPassword":"${AUTH_ADMIN_PASS}",
+         "addUserAsFsAdmin":true,
+         "organizationalUnit":"",
+         "preferredDomainController":"",
+         "overwriteUserAccount":false,
+         "rfc2307Enabled":false,
+         "useSameCredentialsForDns":false,
+         "protocolType":"1"
+      },
+      "nfsv4Domain":"",
+      "nfsVersion":"NFSV3V4",
+      "localDetails":{
+         "protocolType":"2"
+      }
+   },
+   "addUserAsFsAdmin":true,
+   "organizationalUnit":"",
+   "preferredDomainController":"",
+   "fsDnsOperationsDTO":{
+      "dnsOpType":"MS_DNS",
+      "dnsServer":"",
+      "dnsUserName":"${AUTH_ADMIN_USER}",
+      "dnsPassword":"${AUTH_ADMIN_PASS}"
+   }
+}
+EOF
+  )
+
+  # Start the create process
+#  _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+
+echo $HTTP_JSON_BODY
+
+#curl $CURL_HTTP_OPTS --user $PRISM_ADMIN:$PE_PASSWORD -X POST $HTTP_JSON_BODY $_httpURL
+
+  # Check if we got a "1" back (start sequence received). If not, retry. If yes, check if enabled...
+#  if [[ $_response -lt 1 ]]; then
+#    # Check if Karbon has been enabled
+#    _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+#    while [ $_response -ne 1 ]; do
+#        _response=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d ${HTTP_JSON_BODY} ${_httpURL}| grep "taskUuid" | wc -l)
+#    done
+#    log "File Server has been created."
+#  else
+#    log "File Server is not being created, check the logs."
+#  fi
+}
+
+
+###############################################################################################################################################################################
+# Routine to crerate the networks
+###############################################################################################################################################################################
+function network_configure() {
+  local _network_name="${NW1_NAME}"
+
+  if [[ ! -z "${NW2_NAME}" ]]; then
+    #TODO: accommodate for X networks!
+    _network_name="${NW2_NAME}"
+  fi
+
+  if [[ ! -z $(acli "net.list" | grep ${_network_name}) ]]; then
+    log "IDEMPOTENCY: ${_network_name} network set, skip."
   else
     args_required 'AUTH_DOMAIN IPV4_PREFIX AUTH_HOST'
 
@@ -196,31 +344,52 @@ function network_configure() {
     log "Create primary network: Name: ${NW1_NAME}, VLAN: ${NW1_VLAN}, Subnet: ${NW1_SUBNET}, Domain: ${AUTH_DOMAIN}, Pool: ${NW1_DHCP_START} to ${NW1_DHCP_END}"
     acli "net.create ${NW1_NAME} vlan=${NW1_VLAN} ip_config=${NW1_SUBNET}"
     acli "net.update_dhcp_dns ${NW1_NAME} servers=${AUTH_HOST},${DNS_SERVERS} domains=${AUTH_DOMAIN}"
-    acli "net.add_dhcp_pool ${NW1_NAME} start=${NW1_DHCP_START} end=${NW1_DHCP_END}"
+    acli "  net.add_dhcp_pool ${NW1_NAME} start=${NW1_DHCP_START} end=${NW1_DHCP_END}"
 
     if [[ ! -z "${NW2_NAME}" ]]; then
       log "Create secondary network: Name: ${NW2_NAME}, VLAN: ${NW2_VLAN}, Subnet: ${NW2_SUBNET}, Pool: ${NW2_DHCP_START} to ${NW2_DHCP_END}"
       acli "net.create ${NW2_NAME} vlan=${NW2_VLAN} ip_config=${NW2_SUBNET}"
       acli "net.update_dhcp_dns ${NW2_NAME} servers=${AUTH_HOST},${DNS_SERVERS} domains=${AUTH_DOMAIN}"
-      acli "net.add_dhcp_pool ${NW2_NAME} start=${NW2_DHCP_START} end=${NW2_DHCP_END}"
+      acli "  net.add_dhcp_pool ${NW2_NAME} start=${NW2_DHCP_START} end=${NW2_DHCP_END}"
     fi
   fi
 }
 
-function nos_upgrade() {
-  #this is a prototype, untried
-  ntnx_download 'nos'
+###############################################################################################################################################################################
+# Routine to check if the registration of PE was successful
+###############################################################################################################################################################################
 
-  ncli software upload software-type=nos \
-    meta-file-path="$(pwd)/${NTNX_META_URL##*/}" \
-    file-path="$(pwd)/${NTNX_SOURCE_URL##*/}"
+function cluster_check() {
+  local     _attempts=20
+  local         _loop=0
+  local   _pc_version
+  local        _sleep=60
+  local         _test=1
+  local    _test_exit
+  local CURL_HTTP_OPTS=' --max-time 25 --silent --header Content-Type:application/json --header Accept:application/json  --insecure '
+
+  log "PC is version 5.8, enabling and checking"
+   # Enable the PE to PC registration
+   _json_data="{\"ipAddresses\":[\"${PC_HOST}\"],\"username\":\"${PRISM_ADMIN}\",\"password\":\"${PE_PASSWORD}\",\"port\":null}"
+   _response=$(curl -X POST $CURL_HTTP_OPTS --user ${PRISM_ADMIN}:${PE_PASSWORD} https://localhost:9440/PrismGateway/services/rest/v1/multicluster/add_to_multicluster -d $_json_data | jq '.value')
 }
 
+###############################################################################################################################################################################
+# Routine to configure the PC and handoff to the PC local installation
+###############################################################################################################################################################################
+
 function pc_configure() {
+  args_required 'PC_LAUNCH RELEASE'
   local      _command
   local    _container
-  local _dependencies='lib.common.sh global.vars.sh lib.pc.sh calm.sh'
-  #TODO: TOFIX: hardcoded lib.pc.sh calm.sh above
+  local _dependencies="global.vars.sh lib.pc.sh ${PC_LAUNCH}"
+
+  # If we are being called via the we-*.sh, we need to change the lib.common.sh to we-lib.common.sh
+  if [[ ${PC_LAUNCH} != *"we-"* ]]; then
+    _dependencies+=" lib.common.sh"
+  else
+    _dependencies+=" we-lib.common.sh"
+  fi
 
   if [[ -e ${RELEASE} ]]; then
     _dependencies+=" ${RELEASE}"
@@ -228,9 +397,9 @@ function pc_configure() {
     log 'Warning: did NOT find '${RELEASE}
   fi
   log "Send configuration scripts to PC and remove: ${_dependencies}"
-  remote_exec 'scp' 'PC' "${_dependencies}" && rm -f ${_dependencies}
+  remote_exec 'scp' 'PC' "${_dependencies}" && rm -f ${_dependencies} lib.pe.sh
 
-  _dependencies="${JQ_PACKAGE} ${SSHPASS_PACKAGE} id_rsa.pub"
+  _dependencies="bin/${JQ_REPOS[0]##*/} ${SSHPASS_REPOS[0]##*/} id_rsa.pub"
 
   log "OPTIONAL: Send binary dependencies to PC: ${_dependencies}"
   remote_exec 'scp' 'PC' "${_dependencies}" 'OPTIONAL'
@@ -241,18 +410,28 @@ function pc_configure() {
       remote_exec 'SCP' 'PC' ${_container}.tar 'OPTIONAL' &
     fi
   done
+  #####################################################################################
+  ### Handing of to the PC for rest of the installation
+  #####################################################################################
 
-  # Execute that file asynchroneously remotely (script keeps running on CVM in the background)
-  _command="MY_EMAIL=${MY_EMAIL} PC_HOST=${PC_HOST} PE_HOST=${PE_HOST} PE_PASSWORD=${PE_PASSWORD} PC_VERSION=${PC_VERSION} \
-  nohup bash ${HOME}/calm.sh PC"
-  log "Launch PC configuration script... ${_command}"
-  remote_exec 'ssh' 'PC' "${_command} >> calm.log 2>&1 &"
+  ## TODO: If DEBUG is set, we run the below command with bash -x
+  _command="EMAIL=${EMAIL} \
+    PC_HOST=${PC_HOST} PE_HOST=${PE_HOST} PE_PASSWORD=${PE_PASSWORD} \
+    PC_LAUNCH=${PC_LAUNCH} PC_VERSION=${PC_VERSION} nohup bash ${HOME}/${PC_LAUNCH} PC"
+  log "Remote asynchroneous launch PC configuration script... ${_command}"
+  remote_exec 'ssh' 'PC' "${_command} >> ${HOME}/${PC_LAUNCH%%.sh}.log 2>&1 &"
   log "PC Configuration complete: try Validate Staged Clusters now."
 }
 
+###############################################################################################################################################################################
+# Routine to install the PC in the PE
+###############################################################################################################################################################################
 function pc_install() {
-  local             _nw1_uuid
   local    _ncli_softwaretype='PRISM_CENTRAL_DEPLOY'
+  local              _nw_name="${1}"
+  local              _nw_uuid
+  local           _pc_version
+  local _should_auto_register
   local _storage_default_uuid
   local                 _test
 
@@ -262,13 +441,13 @@ function pc_install() {
   if (( $? == 0 )) ; then
     log "IDEMPOTENCY: PC API responds, skip."
   else
-    log "Get NW1, Storage Container UUIDs from cluster..."
-    _nw1_uuid=$(acli "net.get ${NW1_NAME}" \
+    log "Get cluster network and storage container UUIDs..."
+    _nw_uuid=$(acli "net.get ${_nw_name}" \
       | grep "uuid" | cut -f 2 -d ':' | xargs)
     _storage_default_uuid=$(ncli container ls name=${STORAGE_DEFAULT} \
       | grep Uuid | grep -v Pool | cut -f 2 -d ':' | xargs)
-    log "${NW1_NAME} network UUID is ${_nw1_uuid}"
-    log "${STORAGE_DEFAULT} storage container UUID is ${_storage_default_uuid}"
+    log "${_nw_name} network UUID: ${_nw_uuid}"
+    log "${STORAGE_DEFAULT} storage container UUID: ${_storage_default_uuid}"
 
     _test=$(source /etc/profile.d/nutanix_env.sh \
       && ncli --json=true software list \
@@ -278,33 +457,33 @@ function pc_install() {
     if [[ ${_test} != "${PC_VERSION}" ]]; then
       log "PC-${PC_VERSION} not completed. ${_test}"
       ntnx_download "${_ncli_softwaretype}"
-
-      ncli software upload software-type=${_ncli_softwaretype} \
-             file-path="$(pwd)/${NTNX_SOURCE_URL##*/}" \
-        meta-file-path="$(pwd)/${NTNX_META_URL##*/}"
-
-      log "Delete PC sources to free CVM space..."
-      rm -f ${NTNX_SOURCE_URL##*/} ${NTNX_META_URL##*/}
     else
       log "IDEMPOTENCY: PC-${PC_VERSION} upload already completed."
     fi
 
+    # shellcheck disable=2206
+    _pc_version=(${PC_VERSION//./ })
+    if (( ${_pc_version[0]} == 5 && ${_pc_version[1]} <= 6 )); then
+      _should_auto_register='"should_auto_register":true,'
+    fi
+
     log "Deploy Prism Central (typically takes 17+ minutes)..."
-    # TODO:210 make scale-out & dynamic, was: 4vCPU/16GB = 17179869184, 8vCPU/40GB = 42949672960
+    # TODO:160 make scale-out & dynamic, was: 4vCPU/16GB = 17179869184, 8vCPU/40GB = 42949672960
     # Sizing suggestions, certified configurations:
     # https://portal.nutanix.com/#/page/docs/details?targetId=Release-Notes-Prism-Central-v591:sha-pc-scalability-r.html
 
+    # TODO:10 network_configuration.{subnet_mask|default_gateway}
     HTTP_BODY=$(cat <<EOF
 {
   "resources": {
-    "should_auto_register":true,
+    ${_should_auto_register}
     "version":"${PC_VERSION}",
     "pc_vm_list":[{
       "data_disk_size_bytes":536870912000,
       "nic_list":[{
         "network_configuration":{
           "subnet_mask":"255.255.255.128",
-          "network_uuid":"${_nw1_uuid}",
+          "network_uuid":"${_nw_uuid}",
           "default_gateway":"${IPV4_PREFIX}.1"
         },
         "ip_list":["${PC_HOST}"]
@@ -327,25 +506,33 @@ EOF
   fi
 }
 
+###############################################################################################################################################################################
+# Routine to set the PE to use the AutoDC for authentication
+###############################################################################################################################################################################
 function pe_auth() {
   local           _aos
   local   _aos_version
   local _directory_url="ldaps://${AUTH_HOST}/"
+  local         _error=45
 
   args_required 'AUTH_DOMAIN AUTH_FQDN AUTH_HOST AUTH_ADMIN_USER AUTH_ADMIN_PASS AUTH_ADMIN_GROUP'
 
   if [[ -z $(ncli authconfig list-directory name=${AUTH_DOMAIN} | grep Error) ]]; then
     log "IDEMPOTENCY: ${AUTH_DOMAIN} directory set, skip."
   else
+    # https://portal.nutanix.com/kb/1005
     _aos=$(ncli --json=true cluster info | jq -r .data.version)
 
     if [[ ! -z ${_aos} ]]; then
       # shellcheck disable=2206
       _aos_version=(${_aos//./ })
-      log "Checking if _aos ${_aos} >= 5.8"
-      if (( ${_aos_version[0]} >= 5 && ${_aos_version[1]} >= 8 )); then
-        log 'it is'
+      if (( ${_aos_version[0]} >= 5 && ${_aos_version[1]} >= 9 )); then
+        _directory_url="ldap://${AUTH_HOST}:${LDAP_PORT}"
+        log "Adjusted directory-url=${_directory_url} because AOS-${_aos} >= 5.9"
       fi
+    else
+      log "Error ${_error}: couldn't determine AOS version=${_aos}"
+      exit ${_error}
     fi
 
     log "Configure PE external authentication"
@@ -365,8 +552,11 @@ function pe_auth() {
   fi
 }
 
+###############################################################################################################################################################################
+# Routine set PE's initial configuration
+###############################################################################################################################################################################
 function pe_init() {
-  args_required 'DATA_SERVICE_IP MY_EMAIL \
+  args_required 'DATA_SERVICE_IP EMAIL \
     SMTP_SERVER_ADDRESS SMTP_SERVER_FROM SMTP_SERVER_PORT \
     STORAGE_DEFAULT STORAGE_POOL STORAGE_IMAGES \
     SLEEP ATTEMPTS'
@@ -378,8 +568,8 @@ function pe_init() {
     log "Configure SMTP"
     ncli cluster set-smtp-server port=${SMTP_SERVER_PORT} \
       from-email-address=${SMTP_SERVER_FROM} address=${SMTP_SERVER_ADDRESS}
-    ${HOME}/serviceability/bin/email-alerts --to_addresses="${MY_EMAIL}" \
-      --subject="[pe_init:Config SMTP:alert test] `ncli cluster get-params`" \
+    ${HOME}/serviceability/bin/email-alerts --to_addresses="${EMAIL}" \
+      --subject="[pe_init:Config SMTP:alert test] $(ncli cluster get-params)" \
       && ${HOME}/serviceability/bin/send-email
 
     log "Configure NTP"
@@ -408,7 +598,11 @@ function pe_init() {
   fi
 }
 
+###############################################################################################################################################################################
+# Routine to accept the EULA and disable pulse
+###############################################################################################################################################################################
 function pe_license() {
+  local _test
   args_required 'CURL_POST_OPTS PE_PASSWORD'
 
   log "IDEMPOTENCY: Checking PC API responds, curl failures are acceptable..."
@@ -417,15 +611,14 @@ function pe_license() {
   if (( $? == 0 )) ; then
     log "IDEMPOTENCY: PC API responds, skip"
   else
-    log "Validate EULA on PE"
-    curl ${CURL_POST_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST --data '{
+    _test=$(curl ${CURL_POST_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST --data '{
       "username": "SE with $(basename ${0})",
       "companyName": "Nutanix",
       "jobTitle": "SE"
-    }' https://localhost:9440/PrismGateway/services/rest/v1/eulas/accept
+    }' https://localhost:9440/PrismGateway/services/rest/v1/eulas/accept)
+    log "Validate EULA on PE: _test=|${_test}|"
 
-    log "Disable Pulse in PE"
-    curl ${CURL_POST_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X PUT --data '{
+    _test=$(curl ${CURL_POST_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X PUT --data '{
       "defaultNutanixEmail": null,
       "emailContactList": null,
       "enable": false,
@@ -434,7 +627,8 @@ function pe_license() {
       "nosVersion": null,
       "remindLater": null,
       "verbosityType": null
-    }' https://localhost:9440/PrismGateway/services/rest/v1/pulse
+    }' https://localhost:9440/PrismGateway/services/rest/v1/pulse)
+    log "Disable Pulse in PE: _test=|${_test}|"
 
     #echo; log "Create PE Banner Login" # TODO: for PC, login banner
     # https://portal.nutanix.com/#/page/docs/details?targetId=Prism-Central-Guide-Prism-v56:mul-welcome-banner-configure-pc-t.html
@@ -445,4 +639,51 @@ function pe_license() {
     #  '{type: "welcome_banner", key: "welcome_banner_content", value: "HPoC '${OCTET[2]}' password = '${PE_PASSWORD}'"}' \
     #  https://localhost:9440/PrismGateway/services/rest/v1/application/system_data
   fi
+}
+
+###############################################################################################################################################################################
+# Routine to unregister PE from PC
+###############################################################################################################################################################################
+function pc_unregister {
+  local _cluster_uuid
+  local      _pc_uuid
+  # https://portal.nutanix.com/kb/4944
+
+  # PE:
+  cluster status # check
+  ncli -h true multicluster remove-from-multicluster \
+    external-ip-address-or-svm-ips=${PC_HOST} \
+    username=${PRISM_ADMIN} password=${PE_PASSWORD} force=true
+    # Error: This cluster was never added to Prism Central
+  ncli multicluster get-cluster-state # check for none
+  _cluster_uuid=$(ncli cluster info | grep -i uuid | awk -F: '{print $2}' | tr -d '[:space:]')
+
+  exit 0
+  # PC: remote_exec 'PC'
+  chmod u+x /home/nutanix/bin/unregistration_cleanup.py \
+  && python /home/nutanix/bin/unregistration_cleanup.py ${_cluster_uuid}
+  # Uuid of current cluster cannot be passed to cleanup
+  _pc_uuid=$(cluster info) # no such command!
+  # PE:
+  chmod u+x /home/nutanix/bin/unregistration_cleanup.py \
+  && python /home/nutanix/bin/unregistration_cleanup.py ${_pc_uuid}
+
+  # Troubleshooting
+  cat ~/data/logs/unregistration_cleanup.log
+
+  pc_destroy
+}
+
+###############################################################################################################################################################################
+# Routine to destroy the PC VM
+###############################################################################################################################################################################
+function pc_destroy() {
+  local _vm
+
+  dependencies 'install' 'jq' || exit 13
+
+  for _vm in $(acli -o json vm.list | jq -r '.data[] | select(.name | contains("Prism Central")) | .uuid'); do
+    log "PC vm.uuid=${_vm}"
+    acli vm.off ${_vm} && acli -y vm.delete ${_vm}
+  done
 }

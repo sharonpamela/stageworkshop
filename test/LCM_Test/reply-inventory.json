@@ -1,0 +1,495 @@
+{
+    "entity_type": "lcm_available_version",
+    "filtered_group_count": 3,
+    "total_entity_count": 5,
+    "filtered_entity_count": 5,
+    "group_results": [
+        {
+            "entity_results": [
+                {
+                    "entity_id": "1d18b99f-12e8-42f5-a4b5-b41dcc803ef3",
+                    "data": [
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1d18b99f-12e8-42f5-a4b5-b41dcc803ef3"
+                                    ],
+                                    "time": 1554372384133118
+                                }
+                            ],
+                            "name": "uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "41520d2e-76ab-4cbc-88ca-42bb484ba69f"
+                                    ],
+                                    "time": 1554372384133118
+                                }
+                            ],
+                            "name": "entity_uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "PC"
+                                    ],
+                                    "time": 1554372384133118
+                                }
+                            ],
+                            "name": "entity_class"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "available"
+                                    ],
+                                    "time": 1554372384133118
+                                }
+                            ],
+                            "name": "status"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1.0.0"
+                                    ],
+                                    "time": 1554372384133118
+                                }
+                            ],
+                            "name": "version"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "[]"
+                                    ],
+                                    "time": 1554372384133118
+                                }
+                            ],
+                            "name": "dependencies"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1"
+                                    ],
+                                    "time": 1554372384133118
+                                }
+                            ],
+                            "name": "order"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1554372384133118"
+                                    ],
+                                    "time": 1554372384133118
+                                }
+                            ],
+                            "name": "_created_timestamp_usecs_"
+                        }
+                    ]
+                }
+            ],
+            "group_by_column_value": "41520d2e-76ab-4cbc-88ca-42bb484ba69f",
+            "total_entity_count": 1,
+            "group_summaries": {}
+        },
+        {
+            "entity_results": [
+                {
+                    "entity_id": "bcab72a9-d2f9-4327-a882-da4d0675eeea",
+                    "data": [
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "bcab72a9-d2f9-4327-a882-da4d0675eeea"
+                                    ],
+                                    "time": 1554372397678814
+                                }
+                            ],
+                            "name": "uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "7dbb76af-09d5-4b83-9cdb-8a3c0a63f23e"
+                                    ],
+                                    "time": 1554372397678814
+                                }
+                            ],
+                            "name": "entity_uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "PC"
+                                    ],
+                                    "time": 1554372397678814
+                                }
+                            ],
+                            "name": "entity_class"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "available"
+                                    ],
+                                    "time": 1554372397678814
+                                }
+                            ],
+                            "name": "status"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "2.6.0.3"
+                                    ],
+                                    "time": 1554372397678814
+                                }
+                            ],
+                            "name": "version"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "[]"
+                                    ],
+                                    "time": 1554372397678814
+                                }
+                            ],
+                            "name": "dependencies"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1"
+                                    ],
+                                    "time": 1554372397678814
+                                }
+                            ],
+                            "name": "order"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1554372397678814"
+                                    ],
+                                    "time": 1554372397678814
+                                }
+                            ],
+                            "name": "_created_timestamp_usecs_"
+                        }
+                    ]
+                },
+                {
+                    "entity_id": "8e3b6079-d474-4e3a-bae5-558a2c0d5bb9",
+                    "data": [
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "8e3b6079-d474-4e3a-bae5-558a2c0d5bb9"
+                                    ],
+                                    "time": 1554372397685975
+                                }
+                            ],
+                            "name": "uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "7dbb76af-09d5-4b83-9cdb-8a3c0a63f23e"
+                                    ],
+                                    "time": 1554372397685975
+                                }
+                            ],
+                            "name": "entity_uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "PC"
+                                    ],
+                                    "time": 1554372397685975
+                                }
+                            ],
+                            "name": "entity_class"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "available"
+                                    ],
+                                    "time": 1554372397685975
+                                }
+                            ],
+                            "name": "status"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "2.6.0.4"
+                                    ],
+                                    "time": 1554372397685975
+                                }
+                            ],
+                            "name": "version"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "[]"
+                                    ],
+                                    "time": 1554372397685975
+                                }
+                            ],
+                            "name": "dependencies"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "2"
+                                    ],
+                                    "time": 1554372397685975
+                                }
+                            ],
+                            "name": "order"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1554372397685975"
+                                    ],
+                                    "time": 1554372397685975
+                                }
+                            ],
+                            "name": "_created_timestamp_usecs_"
+                        }
+                    ]
+                }
+            ],
+            "group_by_column_value": "7dbb76af-09d5-4b83-9cdb-8a3c0a63f23e",
+            "total_entity_count": 2,
+            "group_summaries": {}
+        },
+        {
+            "entity_results": [
+                {
+                    "entity_id": "18aa787f-4694-487f-8278-e95eb78da3be",
+                    "data": [
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "18aa787f-4694-487f-8278-e95eb78da3be"
+                                    ],
+                                    "time": 1554372411718254
+                                }
+                            ],
+                            "name": "uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "acd9117e-d0c7-4d22-a2ac-7468dfdf07ec"
+                                    ],
+                                    "time": 1554372411718254
+                                }
+                            ],
+                            "name": "entity_uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "PC"
+                                    ],
+                                    "time": 1554372411718254
+                                }
+                            ],
+                            "name": "entity_class"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "available"
+                                    ],
+                                    "time": 1554372411718254
+                                }
+                            ],
+                            "name": "status"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "2.6.0.3"
+                                    ],
+                                    "time": 1554372411718254
+                                }
+                            ],
+                            "name": "version"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "[{\"entity_class\": \"PC\", \"version\": \"2.6.0.3\", \"exact\": \"true\", \"entity_model\": \"Epsilon\"}]"
+                                    ],
+                                    "time": 1554372414999630
+                                }
+                            ],
+                            "name": "dependencies"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1"
+                                    ],
+                                    "time": 1554372411718254
+                                }
+                            ],
+                            "name": "order"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1554372411718254"
+                                    ],
+                                    "time": 1554372411718254
+                                }
+                            ],
+                            "name": "_created_timestamp_usecs_"
+                        }
+                    ]
+                },
+                {
+                    "entity_id": "00a06ebf-0ba1-403c-ac0f-8ae3d5a8c341",
+                    "data": [
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "00a06ebf-0ba1-403c-ac0f-8ae3d5a8c341"
+                                    ],
+                                    "time": 1554372411724529
+                                }
+                            ],
+                            "name": "uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "acd9117e-d0c7-4d22-a2ac-7468dfdf07ec"
+                                    ],
+                                    "time": 1554372411724529
+                                }
+                            ],
+                            "name": "entity_uuid"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "PC"
+                                    ],
+                                    "time": 1554372411724529
+                                }
+                            ],
+                            "name": "entity_class"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "available"
+                                    ],
+                                    "time": 1554372411724529
+                                }
+                            ],
+                            "name": "status"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "2.6.0.4"
+                                    ],
+                                    "time": 1554372411724529
+                                }
+                            ],
+                            "name": "version"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "[{\"entity_class\": \"PC\", \"version\": \"2.6.0.4\", \"exact\": \"true\", \"entity_model\": \"Epsilon\"}]"
+                                    ],
+                                    "time": 1554372415349026
+                                }
+                            ],
+                            "name": "dependencies"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "2"
+                                    ],
+                                    "time": 1554372411724529
+                                }
+                            ],
+                            "name": "order"
+                        },
+                        {
+                            "values": [
+                                {
+                                    "values": [
+                                        "1554372411724529"
+                                    ],
+                                    "time": 1554372411724529
+                                }
+                            ],
+                            "name": "_created_timestamp_usecs_"
+                        }
+                    ]
+                }
+            ],
+            "group_by_column_value": "acd9117e-d0c7-4d22-a2ac-7468dfdf07ec",
+            "total_entity_count": 2,
+            "group_summaries": {}
+        }
+    ],
+    "total_group_count": 3
+}

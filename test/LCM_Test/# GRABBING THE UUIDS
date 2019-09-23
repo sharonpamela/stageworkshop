@@ -1,0 +1,72 @@
+# GRABBING THE UUIDS
+curl -X POST   https://10.42.12.39:9440/api/nutanix/v3/groups   -H 'Authorization: Basic YWRtaW46dGVjaFgyMDE5IQ=='   -H 'Content-Type: application/json'   -H 'Postman-Token: 113df335-5985-4145-bf7c-46aa97b2bef4'   -H 'cache-control: no-cache'   -d '{
+  "entity_type": "lcm_available_version",
+  "grouping_attribute": "entity_uuid",
+  "group_member_count": 1000,
+  "group_member_attributes": [
+    {
+      "attribute": "uuid"
+    },
+    {
+      "attribute": "entity_uuid"
+    },
+    {
+      "attribute": "entity_class"
+    },
+    {
+      "attribute": "status"
+    },
+    {
+      "attribute": "version"
+    },
+    {
+      "attribute": "dependencies"
+    },
+    {
+      "attribute": "order"
+    }
+  ]
+}' --insecure | jq '.group_results[].entity_results[].data[] | select (.name=="entity_uuid")' | sort -u | head -3
+
+
+
+# GRABBING THE Versions of the UUID
+
+curl -X POST   https://10.42.12.39:9440/api/nutanix/v3/groups   -H 'Authorization: Basic YWRtaW46dGVjaFgyMDE5IQ=='   -H 'Content-Type: application/json'   -H 'Postman-Token: 113df335-5985-4145-bf7c-46aa97b2bef4'   -H 'cache-control: no-cache'   -d '{
+  "entity_type": "lcm_available_version",
+  "grouping_attribute": "entity_uuid",
+  "group_member_count": 1000,
+  "group_member_attributes": [
+    {
+      "attribute": "uuid"
+    },
+    {
+      "attribute": "entity_uuid"
+    },
+    {
+      "attribute": "entity_class"
+    },
+    {
+      "attribute": "status"
+    },
+    {
+      "attribute": "version"
+    },
+    {
+      "attribute": "dependencies"
+    },
+    {
+      "attribute": "order"
+    }
+  ]
+}' --insecure | jq 'if .group_results[].entity_results[].data[].values[].values[0]=="03a6e4a2-fa0e-4698-b0c0-e142820a2e94" then
+> if .group_results[].entity_results[].data[].name=="version" then
+
+jq 'if .group_results[].entity_results[].data[].values[].values[0]=="03a6e4a2-fa0e-4698-b0c0-e142820a2e94" then
+if .group_results[].entity_results[].data[].name=="version" then
+.group_results[].entity_results[].data[].values[].values[0] end
+end'
+
+
+jq 'if .group_results[].entity_results[].data[].values[].values[0]=="03a6e4a2-fa0e-4698-b0c0-e142820a2e94" then if .group_results[].entity_results[].data[].name=="version" then .group_results[].entity_results[].data[].values[].values[0] end
+end'

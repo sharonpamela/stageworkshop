@@ -1,16 +1,6 @@
 #!/usr/bin/env bash
 # dependencies: dig
 
-##################################################################################
-# List of date, who  and change made to the file
-# --------------------------------------------------------------------------------
-# 12-04-2019 - Willem Essenstam
-# Changed the run_once function so it checks not on lines in the log file but
-# on if the PC is configured by trying to log in using the set password
-##################################################################################
-
-##################################################################################
-
 function args_required() {
   local _argument
   local    _error=88
@@ -33,8 +23,6 @@ function args_required() {
   fi
 }
 
-##################################################################################
-
 function begin() {
   local _release
 
@@ -44,8 +32,6 @@ function begin() {
 
   log "$(basename ${0})${_release} start._____________________"
 }
-
-##################################################################################
 
 function dependencies {
   local    _argument
@@ -150,8 +136,6 @@ function dependencies {
   esac
 }
 
-##################################################################################
-
 function dns_check() {
   local    _dns
   local  _error
@@ -173,8 +157,6 @@ function dns_check() {
     return ${_error}
   fi
 }
-
-##################################################################################
 
 function download() {
   local           _attempts=5
@@ -218,8 +200,6 @@ function download() {
   done
 }
 
-##################################################################################
-
 function fileserver() {
   local    _action=${1} # REQUIRED
   local      _host=${2} # REQUIRED, TODO: default to PE?
@@ -251,6 +231,11 @@ function fileserver() {
 
       remote_exec 'ssh' ${_host} \
         "python -m SimpleHTTPServer ${_port} || python -m http.server ${_port}"
+
+      # acli image.create AutoDC2 image_type=kDiskImage wait=true container=Images \
+      # source_url=http://10.4.150.64:8181/autodc-2.0.qcow2
+      #AutoDC2: pending
+      #AutoDC2: UploadFailure: Could not access the URL, please check the URL and make sure the hostname is resolvable
       popd || exit
       ;;
     'stop' )
@@ -260,32 +245,27 @@ function fileserver() {
   esac
 }
 
-##################################################################################
-
-
 function finish() {
   log "${0} ran for ${SECONDS} seconds._____________________"
   echo
 }
 
-##################################################################################
-
-
 function images() {
   # https://portal.nutanix.com/#/page/docs/details?targetId=Command-Ref-AOS-v59:acl-acli-image-auto-r.html
-  local         _cli='nuclei'
+  local         _cli='acli'
   local     _command
   local   _http_body
   local       _image
   local  _image_type
   local        _name
-  local      _source='source_uri'
+  local      _source='source_url'
   local        _test
 
-
-#######################################
-# For doing Disk IMAGES
-#######################################
+  which "$_cli"
+  if (( $? > 0 )); then
+         _cli='nuclei'
+      _source='source_uri'
+  fi
 
   for _image in "${QCOW2_IMAGES[@]}" ; do
 
@@ -295,7 +275,10 @@ function images() {
         && ${_cli} image.list 2>&1 \
         | grep -i complete \
         | grep "${_image}")
-
+    else
+      _test=$(source /etc/profile.d/nutanix_env.sh \
+        && ${_cli} image.list 2>&1 \
+        | grep "${_image}")
     fi
 
     if [[ ! -z ${_test} ]]; then
@@ -324,6 +307,10 @@ function images() {
 
       if [[ ${_cli} == 'acli' ]]; then
         _image_type='kDiskImage'
+        if (( $(echo "${SOURCE_URL}" | grep -i -e 'iso$' | wc --lines ) > 0 )); then
+          _image_type='kIsoImage'
+        fi
+
         _command+=" ${_name} annotation=${_image} image_type=${_image_type} \
           container=${STORAGE_IMAGES} architecture=kX86_64 wait=true"
       else
@@ -363,93 +350,27 @@ EOF
     fi
 
   done
-
-  #######################################
-  # For doing ISO IMAGES
-  #######################################
-
-  for _image in "${ISO_IMAGES[@]}" ; do
-
-    # log "DEBUG: ${_image} image.create..."
-    if [[ ${_cli} == 'nuclei' ]]; then
-      _test=$(source /etc/profile.d/nutanix_env.sh \
-        && ${_cli} image.list 2>&1 \
-        | grep -i complete \
-        | grep "${_image}")
-    #else
-    #  _test=$(source /etc/profile.d/nutanix_env.sh \
-    #    && ${_cli} image.list 2>&1 \
-    #    | grep "${_image}")
-    fi
-
-    if [[ ! -z ${_test} ]]; then
-      log "Skip: ${_image} already complete on cluster."
-    else
-      _command=''
-         _name="${_image}"
-
-      if (( $(echo "${_image}" | grep -i -e '^http' -e '^nfs' | wc --lines) )); then
-        log 'Bypass multiple repo source checks...'
-        SOURCE_URL="${_image}"
-      else
-        repo_source QCOW2_REPOS[@] "${_image}" # IMPORTANT: don't ${dereference}[array]!
-      fi
-
-      if [[ -z "${SOURCE_URL}" ]]; then
-        _error=30
-        log "Warning ${_error}: didn't find any sources for ${_image}, continuing..."
-        # exit ${_error}
-      fi
-
-      # TODO:0 TOFIX: acs-centos ugly override for today...
-      if (( $(echo "${_image}" | grep -i 'acs-centos' | wc --lines ) > 0 )); then
-        _name=acs-centos
-      fi
-
-      if [[ ${_cli} == 'acli' ]]; then
-        _image_type='kIsoImage'
-        _command+=" ${_name} annotation=${_image} image_type=${_image_type} \
-          container=${STORAGE_IMAGES} architecture=kX86_64 wait=true"
-      else
-        _command+=" name=${_name} description=\"${_image}\""
-      fi
-
-      if [[ ${_cli} == 'nuclei' ]]; then
-        _http_body=$(cat <<EOF
-{"action_on_failure":"CONTINUE",
-"execution_order":"SEQUENTIAL",
-"api_request_list":[
-  {"operation":"POST",
-  "path_and_params":"/api/nutanix/v3/images",
-  "body":{"spec":
-  {"name":"${_name}","description":"${_image}","resources":{
-    "image_type":"ISO_IMAGE",
-    "source_uri":"${SOURCE_URL}"}},
-  "metadata":{"kind":"image"},"api_version":"3.1.0"}}],"api_version":"3.0"}
-EOF
-        )
-        _test=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST --data "${_http_body}" \
-          https://localhost:9440/api/nutanix/v3/batch)
-        log "batch _test=|${_test}|"
-      else
-
-        ${_cli} "image.create ${_command}" ${_source}=${SOURCE_URL} 2>&1 &
-        if (( $? != 0 )); then
-          log "Warning: Image submission: $?. Continuing..."
-          #exit 10
-        fi
-
-        if [[ ${_cli} == 'nuclei' ]]; then
-          log "NOTE: image.uuid = RUNNING, but takes a while to show up in:"
-          log "TODO: ${_cli} image.list, state = COMPLETE; image.list Name UUID State"
-        fi
-      fi
-    fi
-
-  done
 }
 
-##################################################################################
+# Function to encode the message in the POST as web encoding.
+function rawurlencode() {
+  local string="${1}"
+  local strlen=${#string}
+  local encoded=""
+  local pos c o
+
+  for (( pos=0 ; pos<strlen ; pos++ )); do
+     c=${string:$pos:1}
+     case "$c" in
+        [-_.~a-zA-Z0-9] ) o="${c}" ;;
+        * )               printf -v o '%%%02x' "'$c"
+     esac
+     encoded+="${o}"
+  done
+  # TODO: Centralised Webserver for logging
+  # Send the information to the logserver
+  curl -s -X POST http://10.42.8.60:3000/${encoded}  -H 'cache-control: no-cache'   -H 'content-length: 0'
+}
 
 
 function log() {
@@ -457,10 +378,8 @@ function log() {
 
   _caller=$(echo -n "$(caller 0 | awk '{print $2}')")
   echo "$(date '+%Y-%m-%d %H:%M:%S')|$$|${_caller}|${1}"
+  rawurlencode "$(date '+%Y-%m-%d %H:%M:%S')|$$|${PE_HOST}|${_caller}|${1}"
 }
-
-##################################################################################
-
 
 function ntnx_cmd() {
   local _attempts=25
@@ -494,9 +413,6 @@ function ntnx_cmd() {
   done
 }
 
-##################################################################################
-
-
 function ntnx_download() {
   local          _checksum
   local             _error
@@ -510,28 +426,23 @@ function ntnx_download() {
 
       if [[ "${PC_VERSION}" == "${PC_DEV_VERSION}" ]]; then
         _meta_url="${PC_DEV_METAURL}"
-        _source_url="${PC_DEV_URL}"
-      elif [[ "${PC_VERSION}" == "${PC_CURRENT_VERSION}" ]]; then
-        _meta_url="${PC_CURRENT_METAURL}"
-        _source_url="${PC_CURRENT_URL}"
       else
         _meta_url="${PC_STABLE_METAURL}"
-        _source_url="${PC_STABLE_URL}"
       fi
 
-      #if [[ -z ${_meta_url} ]]; then
-      #  _error=22
-      #  log "Error ${_error}: unsupported PC_VERSION=${PC_VERSION}!"
-      #  log 'Sync the following to global.var.sh...'
-      #  log 'Browse to https://portal.nutanix.com/#/page/releases/prismDetails'
-      #  log " - Find ${PC_VERSION} in the Additional Releases section on the lower right side"
-      #  log ' - Provide the metadata URL for the "PC 1-click deploy from PE" option to this function, both case stanzas.'
-      #  exit ${_error}
-      #fi
+      if [[ -z ${_meta_url} ]]; then
+        _error=22
+        log "Error ${_error}: unsupported PC_VERSION=${PC_VERSION}!"
+        log 'Sync the following to global.var.sh...'
+        log 'Browse to https://portal.nutanix.com/#/page/releases/prismDetails'
+        log " - Find ${PC_VERSION} in the Additional Releases section on the lower right side"
+        log ' - Provide the metadata URL for the "PC 1-click deploy from PE" option to this function, both case stanzas.'
+        exit ${_error}
+      fi
 
-      #if [[ ! -z ${PC_URL} ]]; then
-      #  _source_url="${PC_URL}"
-      #fi
+      if [[ ! -z ${PC_URL} ]]; then
+        _source_url="${PC_URL}"
+      fi
       ;;
     'NOS' | 'nos' | 'AOS' | 'aos')
       # TODO:70 nos is a prototype
@@ -567,24 +478,6 @@ function ntnx_download() {
 
       if [[ ! -z ${FILES_URL} ]]; then
         _source_url="${FILES_URL}"
-      fi
-    ;;
-    FILE_ANALYTICS | file_analytics )
-      args_required 'FILE_ANALYTICS_VERSION'
-      _meta_url="${FILE_ANALYTICS_METAURL}"
-
-      if [[ -z ${_meta_url} ]]; then
-        _error=22
-        log "Error ${_error}: unsupported FILES_VERSION=${FILE_ANALYTICS_VERSION}!"
-        log 'Sync the following to global.var.sh...'
-        log 'Browse to https://portal.nutanix.com/#/page/releases/afsDetails?targetVal=GA'
-        log " - Find ${FILE_ANALYTICS_VERSION} in the Additional Releases section on the lower right side"
-        log ' - Provide the metadata URL option to this function, both case stanzas.'
-        exit ${_error}
-      fi
-
-      if [[ ! -z ${FILE_ANALYTICS_URL} ]]; then
-        _source_url="${FILE_ANALYTICS_URL}"
       fi
     ;;
     * )
@@ -636,9 +529,6 @@ function ntnx_download() {
     exit ${_error}
   fi
 }
-
-##################################################################################
-
 
 function pe_determine() {
   # ${1} REQUIRED: run on 'PE' or 'PC'
@@ -693,9 +583,6 @@ function pe_determine() {
     log "Success: Cluster name=${CLUSTER_NAME}, PE external IP=${PE_HOST}"
   fi
 }
-
-##################################################################################
-
 
 function prism_check {
   # Argument ${1} = REQUIRED: PE or PC
@@ -761,9 +648,6 @@ function prism_check {
     fi
   done
 }
-
-##################################################################################
-
 
 function remote_exec() {
 # Argument ${1} = REQUIRED: ssh or scp
@@ -854,9 +738,6 @@ function remote_exec() {
   done
 }
 
-##################################################################################
-
-
 function repo_source() {
   # https://stackoverflow.com/questions/1063347/passing-arrays-as-parameters-in-bash#4017175
   local _candidates=("${!1}") # REQUIRED
@@ -924,21 +805,15 @@ function repo_source() {
   fi
 }
 
-##################################################################################
-
-
 function run_once() {
-  # Try to login to the PC UI using an API and use the NEW to be password so we can check if PC config has run....
-  _Configured_PC=$(curl -X POST https://${PC_HOST}:9440/api/nutanix/v3/clusters/list --user ${PRISM_ADMIN}:${PE_PASSWORD}  -H 'Content-Type: application/json' -d '{ "kind": "cluster" }' --insecure --silent | grep "AUTHENTICATION_REQUIRED" | wc -l)
-  if [[ $_Configured_PC -lt 1 ]]; then
+  # TODO: PC dependent
+  if [[ ! -z ${PC_LAUNCH} ]] && (( $(cat ${HOME}/${PC_LAUNCH%%.sh}.log | wc ${WC_ARG}) > 20 )); then
+    finish
     _error=2
-    log "Warning ${_error}: ${PC_LAUNCH} already ran and configured PRISM Central, exit!"
+    log "Warning ${_error}: ${PC_LAUNCH} already ran, exit!"
     exit ${_error}
   fi
 }
-
-##################################################################################
-
 
 function ssh_pubkey() {
   local         _dir

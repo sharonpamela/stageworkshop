@@ -9,7 +9,7 @@
 . global.vars.sh
 begin
 
-args_required 'MY_EMAIL PE_HOST PE_PASSWORD PC_VERSION'
+args_required 'EMAIL PE_HOST PE_PASSWORD PC_VERSION'
 
 #dependencies 'install' 'jq' && ntnx_download 'PC' & #attempt at parallelization
 
@@ -86,7 +86,7 @@ EOF"
     && network_configure \
     && authentication_source \
     && pe_auth \
-    && pc_install \
+    && pc_install "${NW1_NAME}" \
     && prism_check 'PC'
 
     if (( $? == 0 )) ; then
@@ -148,8 +148,13 @@ EOF"
 
     pc_init \
     && pc_ui \
-    && pc_auth \
-    && pc_smtp
+    && pc_auth
+
+    # If we run this in a none HPOC we must skip the SMTP config as we have no idea what the SMTP server will be
+    if [[ ! -z ${SMTP_SERVER_ADDRESS}  ]]; then
+      pc_smtp
+    fi
+
 
     ssp_auth \
     && calm_enable \

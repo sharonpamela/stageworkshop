@@ -33,6 +33,15 @@ case ${1} in
       && prism_check 'PC' \
 
       if (( $? == 0 )) ; then
+        ## TODO: If Debug is set we should run with bash -x. Maybe this???? Or are we going to use a fourth parameter
+        # if [ ! -z DEBUG ]; then
+        #    bash_cmd='bash'
+        # else
+        #    bash_cmd='bash -x'
+        # fi
+        # _command="EMAIL=${EMAIL} \
+        #   PC_HOST=${PC_HOST} PE_HOST=${PE_HOST} PE_PASSWORD=${PE_PASSWORD} \
+        #   PC_LAUNCH=${PC_LAUNCH} PC_VERSION=${PC_VERSION} nohup ${bash_cmd} ${HOME}/${PC_LAUNCH} IMAGES"
         _command="EMAIL=${EMAIL} \
            PC_HOST=${PC_HOST} PE_HOST=${PE_HOST} PE_PASSWORD=${PE_PASSWORD} \
            PC_LAUNCH=${PC_LAUNCH} PC_VERSION=${PC_VERSION} nohup bash ${HOME}/${PC_LAUNCH} IMAGES"
@@ -46,7 +55,11 @@ case ${1} in
         log "PE = https://${PE_HOST}:9440"
         log "PC = https://${PC_HOST}:9440"
 
-        files_install && sleep 30 && dependencies 'remove' 'jq' & # parallel, optional. Versus: $0 'files' &
+        files_install && sleep 30
+
+        create_file_server "${NW1_NAME}" "${NW2_NAME}" && sleep 30
+
+        file_analytics_install && sleep 30 && dependencies 'remove' 'jq' & # parallel, optional. Versus: $0 'files' &
         #dependencies 'remove' 'sshpass'
         finish
       fi
@@ -98,15 +111,20 @@ case ${1} in
     && pc_dns_add \
     && pc_ui \
     && pc_auth \
-
-    # If we run this in a none HPOC we must skip the SMTP config as we have no idea what the SMTP server will be
-    if [[ ! -z ${SMTP_SERVER_ADDRESS}  ]]; then
-      pc_smtp
-    fi
+    && pc_smtp
 
     ssp_auth \
     && calm_enable \
+    && karbon_enable \
+    && lcm \
+    && objects_enable \
+    && lcm \
+    && object_store \
+    && karbon_image_download \
     && images \
+    && seedPC \
+    && prismproserver_deploy \
+    && flow_enable \
     && pc_cluster_img_import \
     && prism_check 'PC'
 

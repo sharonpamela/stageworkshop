@@ -1,0 +1,129 @@
+#######################################################################################################
+# EULA acceptance
+#######################################################################################################
+ curl ${CURL_POST_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST --data '{
+      "username": "SE with $(basename ${0})",
+      "companyName": "Nutanix",
+      "jobTitle": "SE"
+    }' https://localhost:9440/PrismGateway/services/rest/v1/eulas/accept
+
+
+#######################################################################################################
+# Disable Pulse
+#######################################################################################################
+curl ${CURL_POST_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X PUT --data '{
+      "defaultNutanixEmail": null,
+      "emailContactList": null,
+      "enable": false,
+      "enableDefaultNutanixEmail": false,
+      "isPulsePromptNeeded": false,
+      "nosVersion": null,
+      "remindLater": null,
+      "verbosityType": null
+    }' https://localhost:9440/PrismGateway/services/rest/v1/pulse
+
+
+
+
+#######################################################################################################
+# Set Dataservices - PE
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Set NTP servers - PE
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Rename the default storage pool to SP01
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Create a Storage Container Images if not exist
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Create two networks (Primary and Secondary)
+#######################################################################################################
+curl -X POST \
+  https://10.42.9.37:9440/api/nutanix/v0.8/networks \
+  -H 'Content-Type: application/json' \
+  -H 'Postman-Token: 836ee60b-0398-456b-967b-7221c3355545' \
+  -H 'cache-control: no-cache' \
+  -d '{"name":"VLAN30","vlanId":"30","ipConfig":{"dhcpOptions":{"domainNameServers":"8.8.8.8","domainSearch":"ntx-demo.local","domainName":"ntnx-demo.local"},"networkAddress":"10.10.30.0","prefixLength":"24","defaultGateway":"10.10.30.254","pool":[{"range":"10.10.30.100 10.10.30.200"}]}}
+'
+
+
+#######################################################################################################
+# Upload the right AutoDC version
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Install, Configure and start the AutoDC
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Configure the AutoDC's DNS server
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Authentication PE to the installed DC
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Create role mapping
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Upload PC files to be used - PE
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Upload Nutanix Files files
+#######################################################################################################
+
+
+
+#######################################################################################################
+# Deploy an Objectstore
+#######################################################################################################
+curl -X POST https://10.42.87.39:9440/oss/api/nutanix/v3/objectstores -d '{"api_version":"3.0","metadata":{"kind":"objectstore"},"spec":{"name":"<NAME>","description":"<DESCRIPTION>","resources":{"domain":"<DOMAIN>","cluster_reference":{"kind":"cluster","uuid":"<CLUSTERUUID>"},"buckets_infra_network_dns":"10.42.<VLAN>.16","buckets_infra_network_vip":"10.42.<VLAN>.17","buckets_infra_network_reference":{"kind":"subnet","uuid":"<PRIMARY_NETWORK_UUID>"},"client_access_network_reference":{"kind":"subnet","uuid":"<PRIMARY_NETWORK_UUID"},"aggregate_resources":{"total_vcpu_count":10,"total_memory_size_mib":98304,"total_capacity_gib":51200},"client_access_network_ipv4_range":{"ipv4_start":"10.42.<VLAN>.18","ipv4_end":"10.42.<VLAN>.21"}}}}' --insecure --silent -H 'Content-Type: application/json'
+
+In need of a different amount of UUIDs before this api will work:
+1. Subnet for the client_access_network; maybe the secondary network? Where is the Windows VM running?
+2. Subnet for the infrastructure; the containers need to be able to talk to the CVMs
+3. Cluster UUID
+
+These UUIDs need to be found dynamically as they differ PER installation/cluster and is the PE UUID NOT the PC UUID!!!
+
+Using: curl -X POST --user <PC_ADMIN>:<PC_PASSWORD> --insecure --silent -d '{"kind":"cluster"}' https://<PC_IP>:9440/api/nutanix/v3/subnets/list
+we can grab the json that has the corresponding :
+- UUID of the cluster
+- UUID of the network we need to have to get the command running. As we need to have them run in the primary network, we can use that UUID in the command
+
+#######################################################################################################
+# Progress creation of an object store
+#######################################################################################################
+curl https://10.42.87.39:9440/oss/api/nutanix/v3/groups -d
+
+
+ '{"entity_type":"objectstore","group_member_sort_attribute":"name","group_member_sort_order":"ASCENDING","group_member_count":20,"group_member_offset":0,"group_member_attributes":[{"attribute":"name"},{"attribute":"domain"},{"attribute":"num_msp_workers"},{"attribute":"usage_bytes"},{"attribute":"num_buckets"},{"attribute":"num_objects"},{"attribute":"num_alerts_internal"},{"attribute":"client_access_network_ip_used_list"},{"attribute":"total_capacity_gib"},{"attribute":"last_completed_step"},{"attribute":"state"},{"attribute":"percentage_complete"},{"attribute":"ipv4_address"},{"attribute":"num_alerts_critical"},{"attribute":"num_alerts_info"},{"attribute":"num_alerts_warning"},{"attribute":"error_message_list"},{"attribute":"cluster_name"},{"attribute":"client_access_network_name"},{"attribute":"client_access_network_ip_list"},{"attribute":"buckets_infra_network_name"},{"attribute":"buckets_infra_network_vip"},{"attribute":"buckets_infra_network_dns"}]}' --compressed --insecure

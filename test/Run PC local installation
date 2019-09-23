@@ -1,0 +1,1 @@
+EMAIL=nathan.cox@nutanix.com            PC_HOST=10.42.41.39 PE_HOST=10.42.41.37 PE_PASSWORD=techX2019!            PC_LAUNCH=ts2019.sh PC_VERSION=5.10.2 :bash -x /home/nutanix/ts2019.sh PC

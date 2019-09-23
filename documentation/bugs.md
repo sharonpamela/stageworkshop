@@ -1,7 +1,7 @@
-Bugs, Priorities, and Notes
+# Bugs, Priorities, and Notes #
 
 ---
-<!-- MDTOC maxdepth:6 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
+<!-- MDTOC maxdepth:6 firsth1:0 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
 
 - [Bugs](#bugs)   
 - [Semi-prioritized Backlog with Technical Debt](#semi-prioritized-backlog-with-technical-debt)   
@@ -20,32 +20,80 @@ Bugs, Priorities, and Notes
 ---
 
 # Bugs #
-- dev :: PC-5.10 bugs: activate Calm, auth, import images
-    - ```2018-12-26 16:05:25|96508|calm_enable|Enable Nutanix Calm...
-2018-12-26 16:05:26|96508|calm_enable|_test=||
-2018-12-26 16:05:26|96508|lcm|PC_VERSION 5.10.0.1 >= 5.9, starting LCM inventory...
-2018-12-26 16:05:26|96508|lcm|inventory _test=|500|```
 
-- BUG = all calm.sh PC service timeout detect/retry
+- BUG = AOS 5.9, 5.10: all calm.sh PC service timeout detect/retry
   - 2018-10-24 21:54:23|14165|Determine_PE|Warning: expect errors on lines 1-2, due to non-JSON outputs by nuclei...
   E1024 21:54:24.142107   14369 jwt.go:35] ZK session is nil
   2018/10/24 21:54:24 Failed to connect to the server: websocket.Dial ws://127.0.0.1:9444/icli: bad status: 403
   - @Michael workaround: py-nuclei?
     - ssh nutanix@10.21.78.39 'source /etc/profile; py-nuclei -u admin -p "password" image.list | grep acs'
+  - dev :: PC-5.10 bugs: activate Calm, auth, import images
+    - ```2018-12-26 16:05:25|96508|calm_enable|Enable Nutanix Calm...
+    2018-12-26 16:05:26|96508|calm_enable|_test=||
+    2018-12-26 16:05:26|96508|lcm|PC_VERSION 5.10.0.1 >= 5.9, starting LCM inventory...
+    2018-12-26 16:05:26|96508|lcm|inventory _test=|500|```
+  - PE> ncli multicluster add-to-multicluster external-ip-address-or-svm-ips=$PC_HOST username=admin password=yaknow
+  - Notify bart.grootzevert when fixed
+  - 2019-02-20 21:28:12|4424|pc_configure|PC>=5.10, manual join PE to PC = |Cluster registration is currently in progress. This operation may take a while.
+Error: The username or password entered is incorrect.|
 
-- RFE:
-  - FIXED = PC 5.9 authentication regression
-    - https://jira.nutanix.com/browse/ENG-180716 = "Invalid service account details" error message is incorrect
-      - Fix scheduled for PC 5.10.1
-    - Workaround = [AutoDC: Version2](autodc/README.md#Version2)
-    - deprecate AutoDC1 for 5.6+5.7+5.8?
+- ADC2 wonky
+  - 2019-02-15 16:12:08|20294|pe_auth|Adjusted directory-url=ldap://10.42.23.40:389 because AOS-5.10.0.1 >= 5.9
+2019-02-15 16:12:08|20294|pe_auth|Configure PE external authentication
+Error: Failed to process server response. Possible reason includes version mismatch between NCLI and Prism Gateway server.
+2019-02-15 16:17:12|20294|pe_auth|Configure PE role map
+Error: Directory name NTNXLAB does not exist
+  - workaround: rerun script, all good.
+
+- FIXED = PC 5.9 authentication regression
+  - https://jira.nutanix.com/browse/ENG-180716 = "Invalid service account details" error message is incorrect
+    - Fix scheduled for PC 5.10.1
+  - Workaround = [AutoDC: Version2](autodc/README.md#Version2)
+  - deprecate AutoDC1 for 5.6-8?
 
 # Semi-prioritized Backlog with Technical Debt #
 
+- Linux migration:
+  - https://hub.docker.com/u/gittools
+    - https://hub.docker.com/r/gittools/gitversion 2 years old: v4.0.0-beta.12 493 MB
+    - https://hub.docker.com/r/gittools/gitversion-fullfx
+      - latest=linux-4.0.1beta, linux-4.0.0 works on LinuxMint
+      - docker pull gittools/gitversion-fullfx:linux{-version}
+      - docker run --rm -v "$(pwd):/repo" gittools/gitversion-fullfx:linux{-version} /repo
+
+            docker image inspect $(docker image ls | grep gitversion | awk '{print $3}') > documentation/container.gitversion.$(uname -s).txt
+
+      - Last known good @MacOS from: image inspect (above):
+        "Created": "2018-10-24T11:46:33.952190652Z",
+        "Container": "404031c17f634908b685d0b1b5f7d015b9f23b6c018a5dc288983306338d8464",
+    - https://hub.docker.com/r/gittools/gitversion-dotnetcore
+      - https://hub.docker.com/r/asimonf/docker-gitversion-compose/dockerfile
+      - https://hub.docker.com/r/pblachut/gitversionindocker/tags
+  - How to:
+    - check for latest remote container tags
+      - How to find all container tags from a remote image registry:
+        - https://stackoverflow.com/questions/24481564/how-can-i-find-a-docker-image-with-a-specific-tag-in-docker-registry-on-the-dock
+
+        curl -s -S "https://registry.hub.docker.com/v2/repositories/library/$@/tags/" | jq '."results"[]["name"]' |sort
+        - https://stackoverflow.com/questions/28320134/how-to-list-all-tags-for-a-docker-image-on-a-remote-registry
+    - purge unused container tags
 - Small improvements/bugs:
-  - Banner: PC-X@HPOC #
+  - Check DNS for cluster is set
+  - Banner: PC-X bug:,@HPOC #
+    - PE banner: PUT /PrismGateway/services/rest/v1/application/system_data
+    {"type":"WELCOME_BANNER","key":"welcome_banner_status","value":true,"username":"system_data","updatedTimeInUsecs":1550212264611000}
+    {"type":"WELCOME_BANNER","key":"welcome_banner_content","value":"Welcome!","username":"system_data","updatedTimeInUsecs":1550212264751000}
+  - Add AutoDC to PE DNS, like PC_DNS
+  - Duplicate images are already active/uploaded on PC: check on import/inactive?
+  - dependencies 'install' 'sshpass' && dependencies 'install' 'jq' || exit 13 everywhere for robustness/parallelization
+  - capture NFS URL timeout error message?
+  - stage-workshop: load into an array, Round-robin clusters
+    - shell-convenience: load cluster array, menu of array index selection
   - tail -f $Branch/workshop.log?
   - Email when PC is ready, point to next steps in guidebook
+  - Refactor PC_URL to be an array?
+  - LCM inventory (check AOS, PC, and LCM version)
+    - Calm 2.6 containers
 - Auth + role mappings
   - OpenLDAP is now supported for Self Service on Prism Central: ENG-126217
   - OpenLDAP works fine for authentication, but Prism Central has a problem with anything more than simple RBAC with it.
@@ -63,8 +111,18 @@ Bugs, Priorities, and Notes
     - PC_Init|Reset PC password to PE password, must be done by nci@PC, not API or on PE
       Error: Password requirements: Should be at least 8 characters long. Should have at least 1 lowercase character(s). Should have at least 1 uppercase character(s). Should have at least 1 digit(s). Should have at least 1 special character(s). Should differ by at least 4 characters from previous password. Should not be from last 5 passwords. Should not have more than 2 same consecutive character(s). Should not be a dictionary word or too simplistic/systematic. Should should have at least one character belonging to 4 out of the 4 supported classes (lowercase, uppercase, digits, special characters).
       2018-10-02 10:56:27|92834|PC_Init|Warning: password not reset: 0.#
-- LCM inventory
-  - Calm 2.6 containers
+- RFE: AOS 5.10.0.1 may need latest or have incompatible AHV release
+  - PE: ncli software ls software-type=Hypervisor
+    - cluster --version <version.185> --md5sum=<md5 from portal> --bundle=<full path to bundle location on CVM> -p host_upgrade
+- RFE: refactor sshpass dependency
+  - Sylvain Huguet   https://nutanix.slack.com/archives/C0JSE04TA/p1549918415017800?thread_ts=1549915109.010300&cid=C0JSE04TA
+    @mark.lavi jot down a note somewhere that I need to revisit that one with you, maybe providing an alternative version as a Docker container would help. Many people have Docker for Mac/Docker for Windows these days
+    Or we can replace that `sshpass` dependancy with a Python script instead, might be another idea.
+    Or start with an API call to push an SSH key to the cluster... then ssh should work passwordless.
+    Chris Rasmussen
+    @shu API call or Python would be preferable, IMO.  More likely that a Python binary already exists on the user's system than Docker.
+    Sylvain Huguet: Docker has other added benefits in terms of packaging sources/binaries with the script and using the docker hub as a CDN/delivery mechanism, especially with Big Bang happening. But we can at least provide alternative method to `sshpass` based on some logic to identify what’s available on the machine.
+    Chris Rasmussen: Yeah, not saying Docker is a _bad_ idea.  Just that in terms of the number of people that could use this script without any changes, Python/API is likely the best choice (on OS X).
 - Test Calm 5.8 bootcamp labs and 5.5-6 bugs
   - https://github.com/nutanixworkshops/introcalm
   vs. https://github.com/mlavi/calm_workshop
@@ -102,9 +160,9 @@ Bugs, Priorities, and Notes
   - Add widget Deployed Applications to (default) dashboard
 - SRE cluster automation
   - Louie: https://confluence.eng.nutanix.com:8443/display/LABS/Internal+Networks
-- Refactor URLs into global.vars.sh via test/url_hardcoded.sh
+- Refactor URLs into global.vars.sh via: test/url_hardcoded.sh
   - refactor out all passwords, hardcoded values to variables
-  - Remove backticks
+  - Remove backticks: scripts/lib.pe.sh:354 remains outside of *md
   - ncli rsyslog
   - Improve log output to be syslog compatible?
     - syslog format: INFO|DEBUG|etc.
@@ -132,6 +190,8 @@ Bugs, Priorities, and Notes
         - $HOME
         - $HOME/cache
         - $HOME/stageworkshop*/cache
+        - PE:software_downloads
+        - PE+PC:ssh_keys
     - PE CVM, for each:
       - check if in ~/cache
         - BENEFIT: reusable cache for any use case
@@ -145,6 +205,7 @@ Bugs, Priorities, and Notes
     - download 403 detection: authentication unauthorized
     - restore http_resume check/attempt
     - create,use cache, fall back to global, next: propagate cache to PC
+      - Refactor all functions to use ${HOME}/cache : ntnx_download, etc.
     - PC import PE images
       - Move images from PE to PC? Make Karbon and Era optional?
       - migrate/import image catalog on PC:
@@ -158,35 +219,32 @@ Bugs, Priorities, and Notes
   - Multi product demo
 
 ## Improved Software Engineering ##
-- I’ve been wrestling with how to best make my bash scripts test driven. There are TDD Bash frameworks, however most of the systems leveraged/orchestrated are external and would require mocking, something I’m not sure how to approach.
+- I've been wrestling with how to best make my bash scripts test driven. There are TDD Bash frameworks, however most of the systems leveraged/orchestrated are external and would require mocking, something I’m not sure how to approach.
 
 What I have done, in most functions, is try to make them [idempotent](https://en.wiktionary.org/wiki/idempotent) by "testing" for the desired outcome and skipping if accomplished. Of course, most of these tests are cheats: they only check for the final stage of a function being accomplished. Usually, this is good enough, because the final configuration is predicated on all preceding stages in the function. It would be ideal to test every operation, but as you can imagine, that’s quite a bit of work.
 
 This gives the ability to rerun the script from the beginning, skip all previously successful work, and rapidly begin work on the next, unaccomplished stage.
 
-I’ve looked into some server testing frameworks.
+I've looked into some server testing frameworks.
 
-- https://stackoverflow.com/questions/14494747/add-images-to-readme-md-on-github
-- https://bors.tech/ "Bors is a GitHub bot that prevents merge skew / semantic merge conflicts, so when a developer checks out the main branch, they can expect all of the tests to pass out-of-the-box."
 - https://githooks.com/
-  - https://github.com/nkantar/Autohook
-  - https://pre-commit.com/
-    - brew install pre-commit
-  - https://github.com/rycus86/githooks
+  - https://github.com/nkantar/Autohook (success)
+  - Also investigated:
+    - https://pre-commit.com/
+      - brew install pre-commit
+    - https://github.com/rycus86/githooks
+  - Research https://medium.freecodecamp.org/improve-development-workflow-of-your-team-with-githooks-9cda15377c3b
+  - TODO via hook?: check if unpushed commits, then allow git commit --amend
+    - https://stackoverflow.com/questions/253055/how-do-i-push-amended-commit-to-the-remote-git-repository
 - Add (git)version/release to each script (assembly?) for github archive cache
   - https://semver.org/
-    - https://guides.github.com/introduction/flow/index.html
     - https://github.com/GitTools/GitVersion
       - https://gitversion.readthedocs.io/en/stable/usage/command-line/
       - brew install gitversion
       - GitVersion /showConfig
     - sudo apt-get install mono-complete
       - do not: sudo apt-get install libcurl3 # removes curl libcurl4
-    - Download dotnet4 zip archive
-    - put on mono-path?
-    - Investigate https://hub.docker.com/r/gittools/gitversion-fullfx/
-      - docker pull gittools/gitversion-fullfx:linux
-      - docker run --rm -v "$(pwd):/repo" gittools/gitversion-fullfx:linux{-version} /repo
+    - Download dotnet4 zip archive and put on mono-path?
     - gitversion | tee gitversion.json | jq -r .FullSemVer
     - ````ls -l *json && echo _GV=${_GV}````
     - ````_GV=gitversion.json ; rm -f ${_GV} \
@@ -195,6 +253,9 @@ I’ve looked into some server testing frameworks.
   - versus https://github.com/markchalloner/git-semver
 - ~/Documents/github.com/ideadevice/calm/src/calm/tests/qa/docs
   = https://github.com/ideadevice/calm/tree/master/src/calm/tests/qa/docs
+- https://stackoverflow.com/questions/14494747/add-images-to-readme-md-on-github
+- https://guides.github.com/introduction/flow/index.html
+- https://bors.tech/ "Bors is a GitHub bot that prevents merge skew / semantic merge conflicts, so when a developer checks out the main branch, they can expect all of the tests to pass out-of-the-box."
 - Per Google shell style guide:
   - refactor function names to lowercase: https://google.github.io/styleguide/shell.xml?showone=Function_Names#Function_Names
 - http://jake.ginnivan.net/blog/2014/05/25/simple-versioning-and-release-notes/
@@ -260,6 +321,7 @@ I’ve looked into some server testing frameworks.
 - Acknowledge https://drt-it-github-prod-1.eng.nutanix.com/sylvain-huguet/auto-hpoc
   - "Drafted a first version. Then @Christophe Jauffret took over and polished it
     Then we handed over the whole thing to Matt and Nathan during the prep for TS18"
+- https://github.com/MMouse-23/FoundationDemoAddon in Powershell!
 - One more: @anthony.c?
 - Add links: https://drt-it-github-prod-1.eng.nutanix.com/akim-sissaoui/calm_aws_setup_blueprint/blob/master/Action%20Create%20Project/3-Create%20AWS%20Calm%20Entry
 - https://gitlab.com/Chandru.tkc/Serviceability_shared/
@@ -267,6 +329,7 @@ I’ve looked into some server testing frameworks.
   - 24:     "heartbeat":    "/PrismGateway/services/rest/v1/heartbeat",
   - 326: def validate_cluster(entity):
   - 500: def add_network_to_project(name,directory_uuid):
+- https://github.com/digitalformula/nutanix-cluster-setup
 
 ## AutoDC ##
   - See also: [AutoDC](autodc/README.md)
@@ -374,6 +437,7 @@ or nuclei, only on PCVM or in container
   - \\lab-ftp\ftp
   - smb://hpoc-ftp/ = \\hpoc-ftp\ftp
   - ftp://nutanix:nutanix/4u@hostedpoc.nutanix.com/
+  - \\pocfs.nutanixdc.local and \\hpoc-afs.nutanixdc.local
   - smb://pocfs/    = \\pocfs\iso\ and \images\
     - nutanixdc\username
   - smb://pocfs.nutanixdc.local use: auth
@@ -428,4 +492,7 @@ git checkout master && git merge [topic_branch]
 git branch --delete [topic_branch]
 git push origin --delete [topic_branch|tag]
 git remote set-url origin git@github.com:mlavi/stageworkshop.git #change transport
+
+$ git stash list
+git stage && git pull --rebase && git stash pop
 ````

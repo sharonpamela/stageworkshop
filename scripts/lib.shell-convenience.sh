@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-# stageworkshop_pe kill && stageworkshop_w1 && stageworkshop_pe
-# TODO:80 prompt for choice when more than one cluster
-# TODO:90 scp?
+# stageworkshop_pe kill && stageworkshop_w 2 && stageworkshop_pe && stageworkshop_pe logs
+# TODO:80 FUTURE: prompt for choice when more than one cluster
 
 . scripts/global.vars.sh
 
@@ -16,9 +15,13 @@ if [[ -e ${RELEASE} && "${1}" != 'quiet' ]]; then
   fi
 fi
 
-alias stageworkshop_pe-chrome='stageworkshop_chrome PE'
-alias stageworkshop_pc-chrome='stageworkshop_chrome PC'
-alias         stageworkshop_w='./stage_workshop.sh -f example_pocs.txt -w '
+alias stageworkshop_pe='stageworkshop_ssh PE'
+alias stageworkshop_pe_ssh='stageworkshop_ssh PE'
+alias stageworkshop_pe_web='stageworkshop_web PE'
+alias stageworkshop_pc='stageworkshop_ssh PC'
+alias stageworkshop_pc_ssh='stageworkshop_ssh PC'
+alias stageworkshop_pc_web='stageworkshop_web PC'
+alias stageworkshop_w='./stage_workshop.sh -f example_pocs.txt -w '
 
 function stageworkshop_auth() {
   . scripts/global.vars.sh
@@ -80,7 +83,7 @@ function stageworkshop_cache_start() {
 
   ps -efww | grep ssh
   unset NTNX_USER PE_HOST PE_PASSWORD SSHPASS
-  stageworkshop_chrome http://localhost:${HTTP_CACHE_PORT}
+  stageworkshop_web http://localhost:${HTTP_CACHE_PORT}
 }
 
 function stageworkshop_cache_stop() {
@@ -88,9 +91,10 @@ function stageworkshop_cache_stop() {
   pkill -f ${HTTP_CACHE_PORT}
 }
 
-function stageworkshop_chrome() {
+function stageworkshop_web() {
+  local _url
+
   stageworkshop_cluster ''
-  local   _url="${1}"
 
   case "${1}" in
     PC | pc)
@@ -103,9 +107,18 @@ function stageworkshop_chrome() {
   esac
   unset NTNX_USER PE_HOST PE_PASSWORD PC_HOST SSHPASS
 
-  if [[ `uname -s` == "Darwin" ]]; then
-    open -a 'Google Chrome' ${_url}
-  fi
+  case "${OS_NAME}" in
+    Darwin)
+      open -a 'Google Chrome' ${_url}
+      ;;
+    LinuxMint | Ubuntu)
+      firefox ${_url} || chromium-browser ${_url} &
+      ;;
+    *)
+      echo "Undetected operating system OS_NAME=${OS_NAME}"
+      exit 10
+      ;;
+  esac
 }
 
 function stageworkshop_cluster() {
@@ -132,18 +145,10 @@ function stageworkshop_cluster() {
 
   export     PE_HOST=${_fields[0]}
   export PE_PASSWORD=${_fields[1]}
-  export    MY_EMAIL=${_fields[2]}
+  export       EMAIL=${_fields[2]}
   echo "INFO|stageworkshop_cluster|PE_HOST=${PE_HOST} PE_PASSWORD=${PE_PASSWORD} NTNX_USER=${NTNX_USER}"
 
   . scripts/global.vars.sh
-}
-
-function stageworkshop_pe() {
-  stageworkshop_ssh 'PE' "${1}"
-}
-
-function stageworkshop_pc() {
-  stageworkshop_ssh 'PC' "${1}"
 }
 
 function stageworkshop_ssh() {
@@ -156,8 +161,11 @@ function stageworkshop_ssh() {
 
   case "${1}" in
     PC | pc)
+      echo "SSHPASS='nutanix/4u' sshpass -e ssh \\
+          ${SSH_OPTS} \\
+          nutanix@${PC_HOST}"
       echo 'pkill -f calm ; tail -f calm*log'
-      echo "PC_VERSION=${PC_VERSION} MY_EMAIL=${MY_EMAIL} PE_PASSWORD='${_password}' ./calm.sh 'PC'"
+      echo "PC_VERSION=${PC_VERSION} EMAIL=${EMAIL} PE_PASSWORD='${_password}' ./calm.sh 'PC'"
           _host=${PC_HOST}
       _password='nutanix/4u'
       ;;
@@ -168,14 +176,19 @@ function stageworkshop_ssh() {
 OPTIONAL: cd stageworkshop-master
    CHECK: wget http://${HTTP_CACHE_HOST}:${HTTP_CACHE_PORT} -q -O-
 
-pkill -f calm ; tail -f calm*log
+SSHPASS='${PE_PASSWORD}' sshpass -e ssh \\
+ ${SSH_OPTS} \\
+ nutanix@${PE_HOST}
+
+pkill -f calm ; tail -f *log
 EOF
 
       echo 'rm -rf master.zip calm*.log stageworkshop-master/ && \'
       echo '  curl --remote-name --location https://raw.githubusercontent.com/mlavi/stageworkshop/master/bootstrap.sh \'
-      echo '  && SOURCE=${_} 'MY_EMAIL=${MY_EMAIL} PE_PASSWORD=${_password}' sh ${_##*/} \'
-      echo '  && tail -f ~/calm*.log'
-      echo -e "cd stageworkshop-master/scripts/ && \ \n PE_HOST=${PE_HOST} PE_PASSWORD='${_password}' PC_VERSION=${PC_DEV_VERSION} MY_EMAIL=${MY_EMAIL} ./calm.sh 'PE'"
+      echo '  && SOURCE=${_} 'EMAIL=${EMAIL} PE_PASSWORD=${_password}' sh ${_##*/} \'
+      echo '  && tail -f ~/*log'
+      echo -e "cd stageworkshop-master/scripts/ && \ \n PE_HOST=${PE_HOST} PE_PASSWORD='${_password}' PC_VERSION=${PC_DEV_VERSION} EMAIL=${EMAIL} ./calm.sh 'PE'"
+      echo "ncli multicluster add-to-multicluster external-ip-address-or-svm-ips=10.42.x.39 username=admin password='x'"
       ;;
     AUTH | auth | ldap)
           _host=${AUTH_HOST}
@@ -186,7 +199,7 @@ EOF
 
   case "${2}" in
     log | logs)
-      _command='date; echo; tail -f calm*log'
+      _command='date; echo; tail -f *log'
       ;;
     calm | inflight)
       _command='ps -efww | grep calm'

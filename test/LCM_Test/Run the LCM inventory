@@ -1,0 +1,47 @@
+# Run the LCM inventory
+{"value":"{\".oid\":\"LifeCycleManager\",\".method\":\"lcm_framework_rpc\",\".kwargs\":{\"method_class\":\"LcmFramework\",\"method\":\"perform_inventory\",\"args\":[\"http://download.nutanix.com/lcm/2.0\"]}}"}
+
+# Run the upgrade of the LCM-2 steps; 1) Generate a plan; 2) execute the plan
+
+# Generate Plan API
+https://10.42.9.39:9440/PrismGateway/services/rest/v1/genesis
+{"value":"{\".oid\":\"LifeCycleManager\",\".method\":\"lcm_framework_rpc\",\".kwargs\":{\"method_class\":\"LcmFramework\",\"method\":\"generate_plan\",\"args\":[\"http://download.nutanix.com/lcm/2.0\",[[\"639b6f37-06c8-4fe0-aeca-5b2c89e61fe6\",\"2.6.0.2\"],[\"dd69fc72-df7f-4195-bb28-6f74eafe353a\",\"2.6.0.2\"]]]}}"}
+
+{"value":"{\".oid\":\"LifeCycleManager\",\".method\":\"lcm_framework_rpc\",\".kwargs\":{\"method_class\":\"LcmFramework\",\"method\":\"generate_plan\",\"args\":[\"http://download.nutanix.com/lcm/2.0\",[[\"06ac7598-d25a-4ba6-a6de-e728446747a1\",\"2.6.0.3\"],[\"5f99949b-7ae6-4095-b23f-f959054f6099\",\"2.6.0.3\"]]]}}"}
+
+{"value":"{\".oid\":\"LifeCycleManager\",\".method\":\"lcm_framework_rpc\",\".kwargs\":{\"method_class\":\"LcmFramework\",\"method":\"generate_plan\",\"args\":[\"http://download.nutanix.com/lcm/2.0\",[[\"293c7506-565e-40a4-93e0-75f1749581ef\",\"2.6.0.3\"],[\"83ee21f9-3468-4693-9e63-a83a657ec6a3\",\"2.6.0.3\"]]]}}"}
+
+# Run the upgrade API
+https://10.42.9.39:9440/PrismGateway/services/rest/v1/genesis
+{"value":"{\".oid\":\"LifeCycleManager\",\".method\":\"lcm_framework_rpc\",\".kwargs\":{\"method_class\":\"LcmFramework\",\"method\":\"perform_update\",\"args\":[\"http://download.nutanix.com/lcm/2.0\",[[\"639b6f37-06c8-4fe0-aeca-5b2c89e61fe6\",\"2.6.0.2\"],[\"dd69fc72-df7f-4195-bb28-6f74eafe353a\",\"2.6.0.2\"]]]}}"}
+
+
+
+# Progress API is at for all LCM steps where the API calls return an ID; entities -> percentageCompleted: (JSON value)
+https://10.42.9.39:9440/PrismGateway/services/rest/v1/progress_monitors?filterCriteria=parent_task_uuid%3D%3D817a37e2-9e57-4774-b889-57325485fd31
+817a37e2-9e57-4774-b889-57325485fd31 = UUID of the task that has been returned by the Execute plan
+%3D%3D means '=='
+
+# Set LCM auto update
+{"value":"{\".oid\":\"LifeCycleManager\",\".method\":\"lcm_framework_rpc\",\".kwargs\":{\"method_class\":\"LcmFramework\",\"method\":\"configure\",\"args\":[\"http://download.nutanix.com/lcm/2.0\",null,null,true]}}"}
+
+# Get the UUIDs and versions of Calm and PC.
+https://10.42.41.39:9440/api/nutanix/v3/groups
+{"entity_type":"lcm_available_version","group_member_attributes":[{"attribute":"uuid"},{"attribute":"entity_uuid"},{"attribute":"entity_class"},{"attribute":"status"},{"attribute":"version"},{"attribute":"dependencies"},{"attribute":"order"}],"query_name":"prism:BaseGroupModel"}
+This will deliver a massive nested JSON file....
+
+
+Get another look at the data in the cluster on existing versions in the PC.
+{"entity_type":"lcm_entity","group_member_count":1000,"group_member_attributes":[{"attribute":"id"},{"attribute":"uuid"},{"attribute":"entity_model"},{"attribute":"version"},{"attribute":"location_id"},{"attribute":"entity_class"},{"attribute":"description"},{"attribute":"last_updated_time_usecs"},{"attribute":"request_version"},{"attribute":"_master_cluster_uuid_"}],"query_name":"prism:LCMQueryModel","filter_criteria":"entity_class==PC;_master_cluster_uuid_==[no_val]"}
+
+ _task_id=$(curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d "{\"value\":\"{\\\".oid\\\":\\\"LifeCycleManager\\\",\\\".method\\\":\\\"lcm_framework_rpc\\\",\\\".kwargs\\\":{\\\"method_class\\\":\\\"LcmFramework\\\",\\\"method\\\":\\\"generate_plan\\\",\\\"args\\\":[\\\"http://download.nutanix.com/lcm/2.0\\\",[[\\\"${_first_uuid}\\\",\\\"${_first_version}\\\"],[\\\"${_sec_uuid}\\\",\\\"${_sec_version}\\\"]]]}}\"}"  ${_url_lcm})
+
+ _task_id=`curl ${CURL_HTTP_OPTS} --user ${PRISM_ADMIN}:${PE_PASSWORD} -X POST -d "{\"value\":\"{\\\".oid\\\":\\\"LifeCycleManager\\\k_rpc\\\",\\\".kwargs\\\":{\\\"method_class\\\":\\\"LcmFramework\\\",\\\"method\\\":\\\"perform_update\\\",\\\"args\\\":[\\\"http://download.nutanix.com/lcm/2.0\\\",[[\\\"${_first_uuid}\\\",\\\"${_first_version}\\\"],[\\\"${_sec_uuid}\\\",\\\"${_sec_version}\\\"]]]}}\"}"  ${_url_lcm}`
+
+Checking if Calm is enabled via:
+
+https://10.42.41.39:9440/api/nutanix/v3/services/nucalm/status
+Response is:
+{
+    "service_enablement_status": "ENABLED"
+}

@@ -1,0 +1,50 @@
+<html>
+    <head><title>Stageworkshop Summary</title>
+        <meta http-equiv="refresh" content="5" >
+    </head>
+<body>
+<style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+</style>
+<meta charset="UTF-8">
+<title>Employees</title>
+<table id="messages" style="width:100%">
+        <tbody>
+            <tr>
+                <th>Hostname</th>
+                <th>Module</th>
+                <th>Log message</th>
+            </tr>
+
+{% if result %}
+
+{% for row in result %}
+
+    <tr>
+        <td> {{ row[0] }}</td>
+        <td> {{ row[1] }}</td>
+        <td> {{ row[2] }}</td>
+    </tr>
+
+{% endfor %}
+
+{% endif %}
+
+
+        
+    </tbody>
+</table>
+</body>
+</html> 
