@@ -46,6 +46,43 @@ function era_deploy() {
 
 }
 
+###############################################################################################################################################################################
+# Routine to deploy PrismProServer
+###############################################################################################################################################################################
+function prismproserver_deploy() {
+VMNAME='PrismProServer'
+
+### Import Image ###
+
+if (( $(source /etc/profile.d/nutanix_env.sh && acli image.list | grep ${VMNAME} | wc --lines) == 0 )); then
+  log "Import ${VMNAME} image from ${SOURCE_URL}..."
+  acli image.create ${VMNAME} \
+    image_type=kDiskImage wait=true \
+    container=${STORAGE_IMAGES} source_url=${SOURCE_URL}
+else
+  log "Image found, assuming ready. Skipping ${VMNAME} import."
+fi
+
+### Deploy PrismProServer ###
+
+log "Create ${VMNAME} VM based on ${VMNAME} image"
+acli "vm.create ${VMNAME} num_vcpus=2 num_cores_per_vcpu=1 memory=2G"
+# vmstat --wide --unit M --active # suggests 2G sufficient, was 4G
+#acli "vm.disk_create ${VMNAME} cdrom=true empty=true"
+acli "vm.disk_create ${VMNAME} clone_from_image=${VMNAME}"
+acli "vm.nic_create ${VMNAME} network=${NW1_NAME}"
+#acli "vm.nic_create ${VMNAME} network=${NW1_NAME} ip=${AUTH_HOST}"
+
+log "Power on ${VMNAME} VM..."
+acli "vm.on ${VMNAME}"
+
+_attempts=20
+_loop=0
+_sleep=10
+
+while true ; do
+  (( _loop++ ))
+}
 
 ###############################################################################################################################################################################
 # Routine to enable Flow
